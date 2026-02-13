@@ -1,0 +1,14 @@
+{
+  "name": "apps/api",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun src/index.ts",
+    "start": "bun src/index.ts"
+  },
+  "dependencies": {
+    "@orpc/server": "^1.13.5",
+    "@repo/db": "workspace:*",
+    "@repo/shared": "workspace:*"
+  }
+}
