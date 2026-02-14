@@ -1,11 +1,26 @@
 export type { SerializeForTransport } from './transport/serialize';
 export { serializeForTransport } from './transport/serialize';
-export type { CreatePostInput, GetPostWithCommentsInput, Post, PostWithComments } from './modules/post/types';
+export type {
+  CreatePostInput,
+  GetPostWithCommentsInput,
+  GetPostWithMetaInput,
+  Post,
+  PostWithComments,
+  PostWithMeta,
+} from './modules/post/types';
 export type { Comment, CreateCommentInput, ListCommentsByPostInput } from './modules/comment/types';
+export type { Category, CategoryTreeNode, CreateCategoryInput } from './modules/category/types';
+export type { CreateTagInput, Tag } from './modules/tag/types';
 export * from './modules/post/schema';
 export * from './modules/post/errors';
 export * from './modules/post/contract';
 export * from './modules/comment/schema';
 export * from './modules/comment/errors';
 export * from './modules/comment/contract';
+export * from './modules/category/schema';
+export * from './modules/category/errors';
+export * from './modules/category/contract';
+export * from './modules/tag/schema';
+export * from './modules/tag/errors';
+export * from './modules/tag/contract';
 export * from './contracts/app';

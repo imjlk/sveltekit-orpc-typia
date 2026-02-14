@@ -42,6 +42,38 @@
       "types": "./dist/modules/comment/errors.d.ts",
       "import": "./dist/modules/comment/errors.js"
     },
+    "./modules/category/types": {
+      "types": "./dist/modules/category/types.d.ts",
+      "import": "./dist/modules/category/types.js"
+    },
+    "./modules/category/schema": {
+      "types": "./dist/modules/category/schema.d.ts",
+      "import": "./dist/modules/category/schema.js"
+    },
+    "./modules/category/contract": {
+      "types": "./dist/modules/category/contract.d.ts",
+      "import": "./dist/modules/category/contract.js"
+    },
+    "./modules/category/errors": {
+      "types": "./dist/modules/category/errors.d.ts",
+      "import": "./dist/modules/category/errors.js"
+    },
+    "./modules/tag/types": {
+      "types": "./dist/modules/tag/types.d.ts",
+      "import": "./dist/modules/tag/types.js"
+    },
+    "./modules/tag/schema": {
+      "types": "./dist/modules/tag/schema.d.ts",
+      "import": "./dist/modules/tag/schema.js"
+    },
+    "./modules/tag/contract": {
+      "types": "./dist/modules/tag/contract.d.ts",
+      "import": "./dist/modules/tag/contract.js"
+    },
+    "./modules/tag/errors": {
+      "types": "./dist/modules/tag/errors.d.ts",
+      "import": "./dist/modules/tag/errors.js"
+    },
     "./contracts/app": {
       "types": "./dist/contracts/app.d.ts",
       "import": "./dist/contracts/app.js"

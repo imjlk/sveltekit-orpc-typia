@@ -2,9 +2,11 @@ import { oc, type as orpcType } from '@orpc/contract';
 import {
   createPostSchema,
   getPostWithCommentsInputSchema,
+  getPostWithMetaInputSchema,
   postListSchema,
   postSchema,
   postWithCommentsSchema,
+  postWithMetaSchema,
 } from './schema';
 
 export const postContract = oc.router({
@@ -22,6 +24,14 @@ export const postContract = oc.router({
   getWithComments: oc
     .input(getPostWithCommentsInputSchema)
     .output(postWithCommentsSchema)
+    .errors({
+      NOT_FOUND: {
+        message: 'Post not found',
+      },
+    }),
+  getWithMeta: oc
+    .input(getPostWithMetaInputSchema)
+    .output(postWithMetaSchema)
     .errors({
       NOT_FOUND: {
         message: 'Post not found',
