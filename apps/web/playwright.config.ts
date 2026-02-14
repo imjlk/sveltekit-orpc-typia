@@ -9,7 +9,7 @@ export default defineConfig({
 	},
 	webServer: [
 		{
-			command: 'PORT=3001 bun run --cwd ../api start',
+			command: 'bun ../../scripts/e2e-api.ts',
 			url: 'http://127.0.0.1:3001/health',
 			reuseExistingServer: true,
 			timeout: 120_000
