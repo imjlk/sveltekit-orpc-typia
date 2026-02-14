@@ -6,6 +6,9 @@ out
 dist
 *.tgz
 
+# local sqlite db (generated; migrations are the SSOT)
+sqlite.db*
+
 # code coverage
 coverage
 *.lcov

@@ -1,0 +1,16 @@
+name = "sveltekit-orpc-typia-web"
+compatibility_date = "2026-02-14"
+
+# SvelteKit adapter-cloudflare output directory.
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+[vars]
+# When true, apps/web will handle /rpc in-process (no upstream proxy).
+ORPC_IN_PROCESS = "1"
+
+[[d1_databases]]
+binding = "DB"
+# Fill these in after `wrangler d1 create ...`
+database_name = "CHANGE_ME"
+database_id = "00000000-0000-0000-0000-000000000000"
+

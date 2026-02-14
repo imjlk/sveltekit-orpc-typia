@@ -74,12 +74,6 @@ const resolveUpstream = (
 		resolvePlatformBinding(env, 'ORPC_DEFAULT') ?? resolvePlatformBinding(env, 'ORPC_API');
 	if (defaultBinding) return { kind: 'binding', binding: defaultBinding };
 
-	// In-process mode (Cloudflare Pages / Workers / local dev): handle within this runtime.
-	// Note: still allows explicit per-router/default upstream overrides above.
-	if (inProcessEnabled) {
-		return { kind: 'local' };
-	}
-
 	// Default URL (Cloudflare env var or Node env var), if configured.
 	const configuredUrl =
 		(typeof env?.ORPC_API_URL === 'string' ? env.ORPC_API_URL : undefined) ??
@@ -88,6 +82,12 @@ const resolveUpstream = (
 
 	if (configuredUrl) {
 		return { kind: 'url', url: normalizeRpcUrl(configuredUrl) };
+	}
+
+	// In-process mode (Cloudflare Pages / Workers / local dev): handle within this runtime.
+	// Note: still allows explicit per-router/default upstream overrides above.
+	if (inProcessEnabled) {
+		return { kind: 'local' };
 	}
 
 	// Fallback: local dev server.
@@ -130,12 +130,11 @@ const getLocalHandler = async (platform: RequestEvent['platform']) => {
 			);
 		}
 
-		const [{ createDb }, { createAppRouter, createOrpcFetchHandler }] = await Promise.all([
-			import('@repo/db/bun'),
-			import('@repo/api')
-		]);
+		const [{ createDb }, { migrateBunSqlite }, { createAppRouter, createOrpcFetchHandler }] =
+			await Promise.all([import('@repo/db/bun'), import('@repo/db/migrations'), import('@repo/api')]);
 
 		const db = createDb();
+		migrateBunSqlite(db);
 		const router = createAppRouter(db);
 
 		return createOrpcFetchHandler(router, {

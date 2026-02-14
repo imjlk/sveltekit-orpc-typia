@@ -5,6 +5,7 @@
 	"type": "module",
   "scripts": {
     "dev": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx --bun vite dev",
+    "dev:cf": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun run build && wrangler pages dev .svelte-kit/cloudflare --port 5173",
     "build": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "prepare": "svelte-kit sync || echo ''",
@@ -13,6 +14,7 @@
     "test:e2e": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx playwright test"
   },
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.0.0",
 		"@playwright/test": "^1.55.0",
 		"@kennethwkz/unplugin-typia": "^2.6.7",
 		"@sveltejs/adapter-cloudflare": "^7.2.6",
@@ -22,7 +24,8 @@
 		"svelte-check": "^4.3.6",
 		"typescript": "^5.9.3",
 		"typia": "^11.0.3",
-		"vite": "^7.3.1"
+		"vite": "^7.3.1",
+		"wrangler": "^4.0.0"
 	},
 	"dependencies": {
 		"@orpc/client": "^1.13.5",

@@ -36,8 +36,18 @@ bun run dev:web:solo
 ```
 
 Notes:
-- `dev:web:solo` uses a copied sqlite DB at `/tmp/sveltekit-orpc-typia.dev.sqlite` (first run only) and sets `ORPC_IN_PROCESS=1`.
-- `apps/web` runs Vite via Bun (`bunx --bun vite ...`) so local in-process mode can import `@repo/db/bun` (`bun:sqlite`).
+- `dev:web:solo` sets `ORPC_IN_PROCESS=1` and uses a local sqlite file at `/tmp/sveltekit-orpc-typia.dev.migrations.sqlite` by default.
+- DB schema is applied automatically at startup from the checked-in migrations in `packages/db/drizzle` (no baseline DB copy).
+- `apps/web` runs Vite via Bun (`bunx --bun vite ...`) so local in-process mode can import `@repo/db/bun` (`bun:sqlite`). Cloudflare uses D1 instead.
+
+Run Cloudflare Pages locally (wrangler + D1 binding):
+```bash
+bun run dev:web:cf
+```
+
+Cloudflare notes:
+- Update `apps/web/wrangler.toml` with your D1 `database_name` / `database_id`.
+- Put secrets in `apps/web/.dev.vars` (see `apps/web/.dev.vars.example`). Wrangler will load `.dev.vars` automatically.
 
 ## RPC Routing (apps/web)
 
@@ -65,6 +75,22 @@ In-process DB selection:
 - Cloudflare runtime: uses D1 binding `DB` (override name with `ORPC_DB_BINDING`)
 - Local dev (Bun): uses sqlite via `@repo/db/bun` (respects `DATABASE_URL` if set)
 
+## DB Migrations
+
+Migrations are the SSOT and are checked in at `packages/db/drizzle/`.
+
+Generate migrations (after editing `packages/db/src/schema.ts`):
+```bash
+bun run --cwd packages/db db:generate
+```
+
+Apply migrations:
+- Local sqlite (`packages/db/sqlite.db`): `bun run --cwd packages/db db:migrate`
+- Cloudflare D1 (via API token): `bun run --cwd packages/db db:migrate:d1` (requires `CF_ACCOUNT_ID`, `CF_D1_DATABASE_ID`, `CF_API_TOKEN`)
+
+Runtime auto-migration:
+- `apps/api` and `apps/web` (Bun sqlite fallback) run `drizzle-orm` migrator on boot using `@repo/db/migrations`.
+
 ## Tests
 
 Run e2e:
@@ -73,7 +99,7 @@ bun run test:e2e
 ```
 
 E2E notes:
-- `scripts/e2e-api.ts` starts `apps/api` at `127.0.0.1:3001` with a copied sqlite DB to avoid mutating the committed `packages/db/sqlite.db`.
+- `scripts/e2e-api.ts` starts `apps/api` at `127.0.0.1:3001` with a fresh temp sqlite DB file and relies on runtime migrations.
 
 ## Cloudflare Notes
 

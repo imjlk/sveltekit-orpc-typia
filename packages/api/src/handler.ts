@@ -5,15 +5,14 @@ type CorsHeaders = Record<string, string>;
 export type OrpcFetchHandlerOptions<TContext> = {
   prefix?: string;
   healthPath?: string;
+  /**
+   * Extra headers applied to all responses (commonly used for CORS).
+   *
+   * Default: undefined (no CORS headers).
+   */
   corsHeaders?: CorsHeaders;
   context?: TContext;
   createContext?: (request: Request) => TContext | Promise<TContext>;
-};
-
-const defaultCorsHeaders: CorsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 export const createOrpcFetchHandler = <TContext extends Record<string, unknown> = Record<string, never>>(
@@ -23,17 +22,28 @@ export const createOrpcFetchHandler = <TContext extends Record<string, unknown> 
   const rpcHandler = new RPCHandler<TContext>(router as never);
   const prefix = options.prefix ?? '/rpc';
   const healthPath = options.healthPath ?? '/health';
-  const corsHeaders = options.corsHeaders ?? defaultCorsHeaders;
+  const corsHeaders = options.corsHeaders;
+
+  const applyCorsHeaders = (headers: Headers) => {
+    if (!corsHeaders) return;
+    for (const [key, value] of Object.entries(corsHeaders)) {
+      headers.set(key, value);
+    }
+  };
 
   return async (request: Request): Promise<Response> => {
     const requestUrl = new URL(request.url);
 
     if (requestUrl.pathname === healthPath) {
-      return new Response('ok', { headers: corsHeaders });
+      const headers = new Headers();
+      applyCorsHeaders(headers);
+      return new Response('ok', { headers });
     }
 
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      const headers = new Headers();
+      applyCorsHeaders(headers);
+      return new Response(null, { status: 204, headers });
     }
 
     const context =
@@ -50,13 +60,13 @@ export const createOrpcFetchHandler = <TContext extends Record<string, unknown> 
     );
 
     if (!result.matched) {
-      return new Response('Not Found', { status: 404, headers: corsHeaders });
+      const headers = new Headers();
+      applyCorsHeaders(headers);
+      return new Response('Not Found', { status: 404, headers });
     }
 
     const responseHeaders = new Headers(result.response.headers);
-    for (const [key, value] of Object.entries(corsHeaders)) {
-      responseHeaders.set(key, value);
-    }
+    applyCorsHeaders(responseHeaders);
 
     return new Response(result.response.body, {
       status: result.response.status,

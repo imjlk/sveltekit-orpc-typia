@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -11,7 +11,6 @@ type ProcSpec = {
 
 const root = resolve(import.meta.dir, '..');
 const sharedDistEntry = resolve(root, 'packages/shared/dist/index.js');
-const baselineDbPath = resolve(root, 'packages/db/sqlite.db');
 
 const prefixLine = (name: string, line: string) => {
   const trimmed = line.replace(/\r?\n$/, '');
@@ -70,13 +69,12 @@ const resolveDevDbPath = () => {
   const provided = process.env.DATABASE_URL;
   if (provided) return provided;
 
-  return resolve(tmpdir(), 'sveltekit-orpc-typia.dev.sqlite');
+  // New filename to avoid conflicts with pre-migrations baseline copies.
+  return resolve(tmpdir(), 'sveltekit-orpc-typia.dev.migrations.sqlite');
 };
 
 const ensureDevDb = (dbPath: string) => {
   mkdirSync(dirname(dbPath), { recursive: true });
-  if (existsSync(dbPath)) return;
-  copyFileSync(baselineDbPath, dbPath);
 };
 
 const children: Array<ReturnType<typeof Bun.spawn>> = [];
@@ -132,4 +130,3 @@ try {
   console.error(err);
   process.exit(1);
 }
-

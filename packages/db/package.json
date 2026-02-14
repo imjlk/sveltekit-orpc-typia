@@ -18,6 +18,10 @@
       "types": "./src/d1.ts",
       "import": "./src/d1.ts"
     },
+    "./migrations": {
+      "types": "./src/migrations.ts",
+      "import": "./src/migrations.ts"
+    },
     "./schema": {
       "types": "./src/schema.ts",
       "import": "./src/schema.ts"
@@ -31,7 +35,9 @@
     "db:fix": "bun scripts/fix-posts-category-fk.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate:d1": "drizzle-kit migrate --config drizzle.d1.config.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

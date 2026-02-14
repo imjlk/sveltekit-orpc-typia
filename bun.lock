@@ -29,6 +29,7 @@
         "@tanstack/svelte-form": "^1.28.0",
       },
       "devDependencies": {
+        "@cloudflare/workers-types": "^4.0.0",
         "@kennethwkz/unplugin-typia": "^2.6.7",
         "@playwright/test": "^1.55.0",
         "@sveltejs/adapter-cloudflare": "^7.2.6",
@@ -39,6 +40,7 @@
         "typescript": "^5.9.3",
         "typia": "^11.0.3",
         "vite": "^7.3.1",
+        "wrangler": "^4.0.0",
       },
     },
     "packages/api": {
