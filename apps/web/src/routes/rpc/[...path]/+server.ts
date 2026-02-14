@@ -2,15 +2,33 @@ import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 
 const DEFAULT_RPC_URL = 'http://127.0.0.1:3000/rpc';
 
+type ServiceBinding = {
+	fetch: (request: Request) => Promise<Response>;
+};
+
 const normalizeRpcUrl = (value: string) => {
 	const trimmed = value.trim().replace(/\/+$/, '');
 	return trimmed.endsWith('/rpc') ? trimmed : `${trimmed}/rpc`;
 };
 
-const resolvePlatformRpcUrl = (platform: RequestEvent['platform']): string | undefined => {
-	const env = (platform as { env?: Record<string, unknown> } | undefined)?.env;
-	const rpcUrl = env?.ORPC_API_URL;
-	return typeof rpcUrl === 'string' ? rpcUrl : undefined;
+const isServiceBinding = (value: unknown): value is ServiceBinding =>
+	!!value && typeof value === 'object' && 'fetch' in value && typeof (value as { fetch?: unknown }).fetch === 'function';
+
+const resolvePlatformEnv = (platform: RequestEvent['platform']): Record<string, unknown> | undefined =>
+	(platform as { env?: Record<string, unknown> } | undefined)?.env;
+
+const resolvePlatformBinding = (
+	env: Record<string, unknown> | undefined,
+	key: string
+): ServiceBinding | undefined => {
+	const direct = env?.[key];
+	if (isServiceBinding(direct)) return direct;
+
+	const bindingName = env?.[`${key}_BINDING`];
+	if (typeof bindingName !== 'string') return undefined;
+
+	const indirect = env?.[bindingName];
+	return isServiceBinding(indirect) ? indirect : undefined;
 };
 
 const resolveNodeRpcUrl = (): string | undefined => {
@@ -18,15 +36,48 @@ const resolveNodeRpcUrl = (): string | undefined => {
 	return env?.ORPC_API_URL ?? env?.VITE_API_URL;
 };
 
-const resolveRpcUrl = (platform: RequestEvent['platform']) => {
-	const value = resolvePlatformRpcUrl(platform) ?? resolveNodeRpcUrl() ?? DEFAULT_RPC_URL;
+const resolveUpstream = (
+	platform: RequestEvent['platform'],
+	routerName: string | undefined
+): { kind: 'binding'; binding: ServiceBinding } | { kind: 'url'; url: string } => {
+	const env = resolvePlatformEnv(platform);
+	const upper = routerName?.toUpperCase();
 
-	return normalizeRpcUrl(value);
+	// Per-router binding via service bindings:
+	// - Direct: env.ORPC_POST (Service Binding)
+	// - Indirect: env.ORPC_POST_BINDING="MY_WORKER" + env.MY_WORKER (Service Binding)
+	if (upper) {
+		const binding = resolvePlatformBinding(env, `ORPC_${upper}`);
+		if (binding) return { kind: 'binding', binding };
+
+		const url = env?.[`ORPC_${upper}_URL`];
+		if (typeof url === 'string') return { kind: 'url', url: normalizeRpcUrl(url) };
+	}
+
+	// Default binding:
+	// - env.ORPC_DEFAULT (Service Binding) or env.ORPC_DEFAULT_BINDING="..."
+	// - env.ORPC_API (Service Binding) or env.ORPC_API_BINDING="..."
+	const defaultBinding =
+		resolvePlatformBinding(env, 'ORPC_DEFAULT') ?? resolvePlatformBinding(env, 'ORPC_API');
+	if (defaultBinding) return { kind: 'binding', binding: defaultBinding };
+
+	// Default URL (Cloudflare env var or Node env var)
+	const url =
+		(typeof env?.ORPC_API_URL === 'string' ? env.ORPC_API_URL : undefined) ??
+		(typeof env?.ORPC_DEFAULT_URL === 'string' ? env.ORPC_DEFAULT_URL : undefined) ??
+		resolveNodeRpcUrl() ??
+		DEFAULT_RPC_URL;
+
+	return { kind: 'url', url: normalizeRpcUrl(url) };
 };
 
 const forwardRpc: RequestHandler = async ({ fetch, params, platform, request, url }) => {
 	const path = params.path ? `/${params.path}` : '';
-	const targetUrl = new URL(`${resolveRpcUrl(platform)}${path}`);
+	const routerName = params.path?.split('/')[0];
+	const upstream = resolveUpstream(platform, routerName);
+
+	const baseRpcUrl = upstream.kind === 'url' ? upstream.url : 'https://orpc.local/rpc';
+	const targetUrl = new URL(`${baseRpcUrl}${path}`);
 	targetUrl.search = url.search;
 
 	const headers = new Headers(request.headers);
@@ -43,7 +94,11 @@ const forwardRpc: RequestHandler = async ({ fetch, params, platform, request, ur
 	}
 
 	try {
-		const response = await fetch(targetUrl, init);
+		const response =
+			upstream.kind === 'binding'
+				? await upstream.binding.fetch(new Request(targetUrl, init))
+				: await fetch(targetUrl, init);
+
 		return new Response(response.body, {
 			status: response.status,
 			headers: response.headers
