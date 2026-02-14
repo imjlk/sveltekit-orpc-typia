@@ -1,6 +1,8 @@
 import { comments } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { commentContract } from '@repo/shared';
+import { badRequest, internalError } from '../../lib/errors';
+import { trimRequired } from '../../lib/input';
 import type { DbClient } from '../../types';
 
 type CommentInsert = typeof comments.$inferInsert;
@@ -12,15 +14,8 @@ export const createCommentRouter = (db: DbClient) =>
     create: comment.create.handler(async ({ input }) => {
       const trimmedInput: Pick<CommentInsert, 'postId' | 'content'> = {
         postId: input.postId,
-        content: input.content.trim(),
+        content: trimRequired('Content', input.content),
       };
-
-      if (!trimmedInput.content) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Content is required',
-          data: { reason: 'Content is required' },
-        });
-      }
 
       // Optional: validate post exists early to return a nicer error.
       const postExists = await db.query.posts.findFirst({
@@ -29,10 +24,7 @@ export const createCommentRouter = (db: DbClient) =>
       });
 
       if (!postExists) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Invalid postId',
-          data: { reason: 'Invalid postId' },
-        });
+        throw badRequest('Invalid postId', { reason: 'Invalid postId' });
       }
 
       try {
@@ -40,9 +32,7 @@ export const createCommentRouter = (db: DbClient) =>
         const createdComment = createdRows[0];
 
         if (!createdComment) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: 'Comment creation failed',
-          });
+          throw internalError('Comment creation failed');
         }
 
         return createdComment;
@@ -51,10 +41,7 @@ export const createCommentRouter = (db: DbClient) =>
           throw error;
         }
 
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Failed to create comment',
-          data: { reason: 'Failed to create comment' },
-        });
+        throw internalError('Failed to create comment', error);
       }
     }),
     listByPost: comment.listByPost.handler(async ({ input }) => {

@@ -19,6 +19,10 @@ declare global {
 				// Future service binding support (router split deployments).
 				ORPC_DEFAULT?: Fetcher;
 				ORPC_API?: Fetcher;
+				ORPC_POST?: Fetcher;
+				ORPC_COMMENT?: Fetcher;
+				ORPC_CATEGORY?: Fetcher;
+				ORPC_TAG?: Fetcher;
 
 				[key: string]: unknown;
 			};

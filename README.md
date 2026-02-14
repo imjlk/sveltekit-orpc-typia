@@ -12,6 +12,8 @@ The main idea is:
 
 - `apps/web`: SvelteKit (adapter-cloudflare)
 - `apps/api`: Bun dev server (optional)
+- `apps/worker-content`: Cloudflare Worker (post + comment) for service-binding split deployments
+- `apps/worker-meta`: Cloudflare Worker (category + tag) for service-binding split deployments
 - `packages/shared`: contracts/schemas/types/transport helpers
 - `packages/api`: server implementation (router factory + fetch handler)
 - `packages/db`: Drizzle schema + runtime-specific DB adapters
@@ -48,17 +50,35 @@ bun run dev:web:cf
 Cloudflare notes:
 - Update `apps/web/wrangler.toml` with your D1 `database_name` / `database_id`.
 - Put secrets in `apps/web/.dev.vars` (see `apps/web/.dev.vars.example`). Wrangler will load `.dev.vars` automatically.
+- `dev:web:cf` applies checked-in Drizzle SQL migrations into the local D1 persistence directory before starting Pages.
+- If your local D1 state gets out of sync, reset it:
+```bash
+bun run dev:web:cf:reset
+```
 - Quick smoke (local Pages runtime + local D1 + migrations):
 ```bash
 bun run smoke:web:cf
 ```
 
-## RPC Routing (apps/web)
+Run Pages locally with Workers service bindings (split routers across two Workers):
+```bash
+bun run dev:web:cf:services
+```
 
-`apps/web/src/routes/rpc/[...path]/+server.ts` is the single gateway endpoint.
+## Gateway Routing (apps/web)
+
+Gateways:
+- `/rpc/*` (Standard RPC)
+- `/api/*` (OpenAPI-style REST)
+
+Implementation:
+- `apps/web/src/lib/server/orpc-gateway.ts` (shared gateway logic)
+- `apps/web/src/routes/rpc/[...path]/+server.ts`
+- `apps/web/src/routes/api/[...path]/+server.ts`
 
 Path shape:
 - `/rpc/<router>/<procedure>`
+- `/api/<router>/<procedure>`
 
 Upstream resolution order:
 1. Per-router Cloudflare service binding:
@@ -73,7 +93,7 @@ Upstream resolution order:
 5. In-process mode:
    - `ORPC_IN_PROCESS=1`
 6. Fallback:
-   - `http://127.0.0.1:3000/rpc`
+   - `http://127.0.0.1:3000/<rpc|api>`
 
 In-process DB selection:
 - Cloudflare runtime: uses D1 binding `DB` (override name with `ORPC_DB_BINDING`)

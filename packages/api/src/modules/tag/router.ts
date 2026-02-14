@@ -1,6 +1,8 @@
 import { tags } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { tagContract } from '@repo/shared';
+import { internalError } from '../../lib/errors';
+import { trimRequired } from '../../lib/input';
 import type { DbClient } from '../../types';
 
 type TagInsert = typeof tags.$inferInsert;
@@ -11,15 +13,8 @@ export const createTagRouter = (db: DbClient) =>
   tag.router({
     create: tag.create.handler(async ({ input }) => {
       const trimmedInput: Pick<TagInsert, 'name'> = {
-        name: input.name.trim(),
+        name: trimRequired('Name', input.name),
       };
-
-      if (!trimmedInput.name) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Name is required',
-          data: { reason: 'Name is required' },
-        });
-      }
 
       try {
         const createdRows = await db
@@ -38,9 +33,7 @@ export const createTagRouter = (db: DbClient) =>
         });
 
         if (!existing) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: 'Tag creation failed',
-          });
+          throw internalError('Tag creation failed');
         }
 
         return existing;
@@ -49,10 +42,7 @@ export const createTagRouter = (db: DbClient) =>
           throw error;
         }
 
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Failed to create tag',
-          data: { reason: 'Failed to create tag' },
-        });
+        throw internalError('Failed to create tag', error);
       }
     }),
     list: tag.list.handler(async () => {

@@ -1,15 +1,9 @@
 import { oc, populateContractRouterPaths } from '@orpc/contract';
-import { categoryContract } from '../modules/category/contract';
-import { commentContract } from '../modules/comment/contract';
-import { postContract } from '../modules/post/contract';
-import { tagContract } from '../modules/tag/contract';
+import { ROUTER_CONTRACTS } from './registry';
 
 export const appContract = populateContractRouterPaths(
   oc.router({
-    post: postContract,
-    comment: commentContract,
-    category: categoryContract,
-    tag: tagContract,
+    ...ROUTER_CONTRACTS,
   }),
 );
 

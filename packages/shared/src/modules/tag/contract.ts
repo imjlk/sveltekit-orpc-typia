@@ -1,8 +1,8 @@
 import { oc, type as orpcType } from '@orpc/contract';
 import { createTagSchema, tagListSchema, tagSchema } from './schema';
-import { badRequestDataSchema } from '../../errors/schema';
+import { commonErrors } from '../../errors/common';
 
-export const tagContract = oc.tag('tag').router({
+export const tagContract = oc.tag('tag').errors(commonErrors).router({
   create: oc
     .input(createTagSchema)
     .output(tagSchema)
@@ -10,13 +10,6 @@ export const tagContract = oc.tag('tag').router({
       summary: 'Create tag',
       description:
         'Creates a tag. Tag names are unique; repeated calls for the same name are idempotent and return the existing tag.',
-    })
-    .errors({
-      BAD_REQUEST: {
-        status: 400,
-        message: 'Invalid tag data',
-        data: badRequestDataSchema,
-      },
     }),
   list: oc
     .input(orpcType<void>())

@@ -1,6 +1,8 @@
 import { postTags, posts } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { postContract } from '@repo/shared';
+import { badRequest, internalError, notFound } from '../../lib/errors';
+import { dedupeNumbers, trimRequired } from '../../lib/input';
 import type { DbClient } from '../../types';
 
 type PostInsert = typeof posts.$inferInsert;
@@ -11,17 +13,10 @@ export const createPostRouter = (db: DbClient) =>
   post.router({
     create: post.create.handler(async ({ input }) => {
       const trimmedInput: Pick<PostInsert, 'title' | 'content' | 'categoryId'> = {
-        title: input.title.trim(),
-        content: input.content.trim(),
+        title: trimRequired('Title', input.title),
+        content: trimRequired('Content', input.content),
         categoryId: input.categoryId ?? null,
       };
-
-      if (!trimmedInput.title || !trimmedInput.content) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Title and content are required',
-          data: { reason: 'Title and content are required' },
-        });
-      }
 
       if (trimmedInput.categoryId != null) {
         const categoryExists = await db.query.categories.findFirst({
@@ -31,10 +26,7 @@ export const createPostRouter = (db: DbClient) =>
         });
 
         if (!categoryExists) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid categoryId',
-            data: { reason: 'Invalid categoryId' },
-          });
+          throw badRequest('Invalid categoryId', { reason: 'Invalid categoryId' });
         }
       }
 
@@ -43,12 +35,10 @@ export const createPostRouter = (db: DbClient) =>
         const postRow = createdRows[0];
 
         if (!postRow) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: 'Post creation failed',
-          });
+          throw internalError('Post creation failed');
         }
 
-        const uniqueTagIds = Array.from(new Set(input.tagIds ?? []));
+        const uniqueTagIds = dedupeNumbers(input.tagIds ?? []);
         if (uniqueTagIds.length > 0) {
           await db
             .insert(postTags)
@@ -63,10 +53,7 @@ export const createPostRouter = (db: DbClient) =>
           throw error;
         }
 
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Failed to create post',
-          data: { reason: 'Failed to create post' },
-        });
+        throw internalError('Failed to create post', error);
       }
     }),
     list: post.list.handler(async () => {
@@ -81,10 +68,7 @@ export const createPostRouter = (db: DbClient) =>
       });
 
       if (!row) {
-        throw new ORPCError('NOT_FOUND', {
-          message: 'Post not found',
-          data: { resource: 'post', id: input.id },
-        });
+        throw notFound('post', input.id, 'Post not found');
       }
 
       return row;
@@ -103,10 +87,7 @@ export const createPostRouter = (db: DbClient) =>
       });
 
       if (!row) {
-        throw new ORPCError('NOT_FOUND', {
-          message: 'Post not found',
-          data: { resource: 'post', id: input.id },
-        });
+        throw notFound('post', input.id, 'Post not found');
       }
 
       return row;

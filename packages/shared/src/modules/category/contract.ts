@@ -1,8 +1,8 @@
 import { oc, type as orpcType } from '@orpc/contract';
 import { categoryListSchema, categorySchema, categoryTreeSchema, createCategorySchema } from './schema';
-import { badRequestDataSchema } from '../../errors/schema';
+import { commonErrors } from '../../errors/common';
 
-export const categoryContract = oc.tag('category').router({
+export const categoryContract = oc.tag('category').errors(commonErrors).router({
   create: oc
     .input(createCategorySchema)
     .output(categorySchema)
@@ -10,13 +10,6 @@ export const categoryContract = oc.tag('category').router({
       summary: 'Create category',
       description:
         'Creates a category node. Optionally links to a parent category. Returns the created category (all dates are serialized to ISO strings).',
-    })
-    .errors({
-      BAD_REQUEST: {
-        status: 400,
-        message: 'Invalid category data',
-        data: badRequestDataSchema,
-      },
     }),
   list: oc
     .input(orpcType<void>())

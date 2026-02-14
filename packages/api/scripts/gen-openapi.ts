@@ -6,7 +6,7 @@ import { isContractProcedure } from '@orpc/contract';
 import { OpenAPIGenerator, toOpenAPISchema, type ConditionalSchemaConverter } from '@orpc/openapi';
 import type { JSONSchema } from 'json-schema-typed/draft-2020-12';
 
-import { appContract, getOpenApiUnit } from '@repo/shared';
+import { appContract, getOpenApiUnit, OPENAPI_TAG_DEFINITIONS } from '@repo/shared';
 
 // packages/api/scripts -> repo root is 3 levels up
 const repoRoot = resolve(import.meta.dir, '../../..');
@@ -31,12 +31,7 @@ This spec describes the \`/rpc\` endpoints but the payload is wrapped:
 - Response body: \`{ "json": <output>, "meta"?: [...] }\`
 `;
 
-const TAG_DEFINITIONS: Array<{ name: string; description: string }> = [
-  { name: 'post', description: 'Posts domain procedures.' },
-  { name: 'comment', description: 'Comments domain procedures.' },
-  { name: 'category', description: 'Hierarchical categories (tree) procedures.' },
-  { name: 'tag', description: 'Flat tags procedures.' },
-];
+const TAG_DEFINITIONS = OPENAPI_TAG_DEFINITIONS as unknown as Array<{ name: string; description: string }>;
 
 const stringify = (value: unknown) => JSON.stringify(value, null, 2) + '\n';
 const deepEqualJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);

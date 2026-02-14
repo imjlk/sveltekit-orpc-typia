@@ -1,8 +1,8 @@
 import { oc } from '@orpc/contract';
 import { commentListSchema, commentSchema, createCommentSchema, listCommentsByPostSchema } from './schema';
-import { badRequestDataSchema } from '../../errors/schema';
+import { commonErrors } from '../../errors/common';
 
-export const commentContract = oc.tag('comment').router({
+export const commentContract = oc.tag('comment').errors(commonErrors).router({
   create: oc
     .input(createCommentSchema)
     .output(commentSchema)
@@ -10,13 +10,6 @@ export const commentContract = oc.tag('comment').router({
       summary: 'Create comment',
       description:
         'Creates a comment for a post. Input is validated and trimmed. Returns the created comment (all dates are serialized to ISO strings).',
-    })
-    .errors({
-      BAD_REQUEST: {
-        status: 400,
-        message: 'Invalid comment data',
-        data: badRequestDataSchema,
-      },
     }),
   listByPost: oc
     .input(listCommentsByPostSchema)

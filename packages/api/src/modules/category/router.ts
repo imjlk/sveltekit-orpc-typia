@@ -1,6 +1,8 @@
 import { categories } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { categoryContract } from '@repo/shared';
+import { badRequest, internalError } from '../../lib/errors';
+import { trimRequired } from '../../lib/input';
 import type { DbClient } from '../../types';
 
 type CategoryRow = typeof categories.$inferSelect;
@@ -13,16 +15,9 @@ export const createCategoryRouter = (db: DbClient) =>
   category.router({
     create: category.create.handler(async ({ input }) => {
       const trimmedInput: Pick<CategoryInsert, 'name' | 'parentId'> = {
-        name: input.name.trim(),
+        name: trimRequired('Name', input.name),
         parentId: input.parentId ?? null,
       };
-
-      if (!trimmedInput.name) {
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Name is required',
-          data: { reason: 'Name is required' },
-        });
-      }
 
       if (trimmedInput.parentId != null) {
         const parentExists = await db.query.categories.findFirst({
@@ -31,10 +26,7 @@ export const createCategoryRouter = (db: DbClient) =>
         });
 
         if (!parentExists) {
-          throw new ORPCError('BAD_REQUEST', {
-            message: 'Invalid parentId',
-            data: { reason: 'Invalid parentId' },
-          });
+          throw badRequest('Invalid parentId', { reason: 'Invalid parentId' });
         }
       }
 
@@ -43,9 +35,7 @@ export const createCategoryRouter = (db: DbClient) =>
         const createdCategory = createdRows[0];
 
         if (!createdCategory) {
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            message: 'Category creation failed',
-          });
+          throw internalError('Category creation failed');
         }
 
         return createdCategory;
@@ -54,10 +44,7 @@ export const createCategoryRouter = (db: DbClient) =>
           throw error;
         }
 
-        throw new ORPCError('BAD_REQUEST', {
-          message: 'Failed to create category',
-          data: { reason: 'Failed to create category' },
-        });
+        throw internalError('Failed to create category', error);
       }
     }),
     list: category.list.handler(async () => {

@@ -4,6 +4,7 @@ export * from './transport/openapi';
 export * from './transport/scalar';
 export * from './errors/types';
 export * from './errors/schema';
+export * from './errors/common';
 export type {
   CreatePostInput,
   GetPostWithCommentsInput,
@@ -29,3 +30,4 @@ export * from './modules/tag/errors';
 export * from './modules/tag/contract';
 export * from './contracts/app';
 export * from './contracts/services';
+export * from './contracts/registry';
