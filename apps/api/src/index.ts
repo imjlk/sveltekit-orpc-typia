@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { createAppRouter, createOpenApiFetchHandler, createOrpcFetchHandler } from '@repo/api';
 import { createDb } from '@repo/db/bun';
 import { migrateBunSqlite } from '@repo/db/migrations';
+import { renderScalarDocsHtml } from '@repo/shared';
 
 const port = Number(process.env.PORT ?? 3000);
 
@@ -32,24 +33,6 @@ const getSpecText = async (kind: 'api' | 'rpc'): Promise<string> => {
     throw Object.assign(new Error(message), { cause: err });
   }
 };
-
-const renderScalarHtml = (specUrl: string, title: string) => `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${title}</title>
-    <meta name="robots" content="noindex, nofollow" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
-    <script>
-      Scalar.createApiReference('#app', { url: ${JSON.stringify(specUrl)} });
-    </script>
-  </body>
-</html>
-`;
 
 const corsHeaders =
   process.env.NODE_ENV === 'production'
@@ -85,7 +68,7 @@ serve({
 
     // Scalar UI + spec endpoints (served by Bun server too, for local dev parity).
     if (pathname === '/api/docs' || pathname === '/api/docs/') {
-      return new Response(renderScalarHtml('/api/spec.json', 'sveltekit-orpc-typia API'), {
+      return new Response(renderScalarDocsHtml({ specUrl: '/api/spec.json', title: 'sveltekit-orpc-typia API' }), {
         status: 200,
         headers: {
           'content-type': 'text/html; charset=utf-8',
@@ -95,13 +78,19 @@ serve({
     }
 
     if (pathname === '/api/docs/rpc' || pathname === '/api/docs/rpc/') {
-      return new Response(renderScalarHtml('/api/spec.rpc.json', 'sveltekit-orpc-typia RPC (Standard RPC)'), {
-        status: 200,
-        headers: {
-          'content-type': 'text/html; charset=utf-8',
-          'x-robots-tag': 'noindex',
+      return new Response(
+        renderScalarDocsHtml({
+          specUrl: '/api/spec.rpc.json',
+          title: 'sveltekit-orpc-typia RPC (Standard RPC)',
+        }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'text/html; charset=utf-8',
+            'x-robots-tag': 'noindex',
+          },
         },
-      });
+      );
     }
 
     if (pathname === '/api/spec.json') {
