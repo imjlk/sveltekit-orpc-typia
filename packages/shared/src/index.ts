@@ -24,3 +24,4 @@ export * from './modules/tag/schema';
 export * from './modules/tag/errors';
 export * from './modules/tag/contract';
 export * from './contracts/app';
+export * from './contracts/services';
