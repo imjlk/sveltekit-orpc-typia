@@ -10,10 +10,11 @@ export const mapStandardSchema = <TInput, TOutput>(
   schema: StandardSchemaV1<TOutput, TOutput>,
   map: (input: TInput) => TOutput,
 ): StandardSchemaV1<TInput, TOutput> => ({
+  // Preserve any extra properties attached to the schema (e.g. OpenAPI metadata).
+  ...(schema as object),
   '~standard': {
     version: 1,
     vendor: schema['~standard'].vendor,
     validate: (value: unknown, options) => schema['~standard'].validate(map(value as TInput), options),
   },
 });
-

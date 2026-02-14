@@ -1,5 +1,8 @@
 export type { SerializeForTransport } from './transport/serialize';
 export { serializeForTransport } from './transport/serialize';
+export * from './transport/openapi';
+export * from './errors/types';
+export * from './errors/schema';
 export type {
   CreatePostInput,
   GetPostWithCommentsInput,

@@ -17,6 +17,7 @@ export const createTagRouter = (db: DbClient) =>
       if (!trimmedInput.name) {
         throw new ORPCError('BAD_REQUEST', {
           message: 'Name is required',
+          data: { reason: 'Name is required' },
         });
       }
 
@@ -50,6 +51,7 @@ export const createTagRouter = (db: DbClient) =>
 
         throw new ORPCError('BAD_REQUEST', {
           message: 'Failed to create tag',
+          data: { reason: 'Failed to create tag' },
         });
       }
     }),
@@ -57,4 +59,3 @@ export const createTagRouter = (db: DbClient) =>
       return db.select().from(tags).all();
     }),
   });
-

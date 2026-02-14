@@ -19,6 +19,7 @@ export const createPostRouter = (db: DbClient) =>
       if (!trimmedInput.title || !trimmedInput.content) {
         throw new ORPCError('BAD_REQUEST', {
           message: 'Title and content are required',
+          data: { reason: 'Title and content are required' },
         });
       }
 
@@ -32,6 +33,7 @@ export const createPostRouter = (db: DbClient) =>
         if (!categoryExists) {
           throw new ORPCError('BAD_REQUEST', {
             message: 'Invalid categoryId',
+            data: { reason: 'Invalid categoryId' },
           });
         }
       }
@@ -63,6 +65,7 @@ export const createPostRouter = (db: DbClient) =>
 
         throw new ORPCError('BAD_REQUEST', {
           message: 'Failed to create post',
+          data: { reason: 'Failed to create post' },
         });
       }
     }),
@@ -80,6 +83,7 @@ export const createPostRouter = (db: DbClient) =>
       if (!row) {
         throw new ORPCError('NOT_FOUND', {
           message: 'Post not found',
+          data: { resource: 'post', id: input.id },
         });
       }
 
@@ -101,6 +105,7 @@ export const createPostRouter = (db: DbClient) =>
       if (!row) {
         throw new ORPCError('NOT_FOUND', {
           message: 'Post not found',
+          data: { resource: 'post', id: input.id },
         });
       }
 

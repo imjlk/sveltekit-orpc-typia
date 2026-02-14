@@ -20,6 +20,7 @@ export const createCategoryRouter = (db: DbClient) =>
       if (!trimmedInput.name) {
         throw new ORPCError('BAD_REQUEST', {
           message: 'Name is required',
+          data: { reason: 'Name is required' },
         });
       }
 
@@ -32,6 +33,7 @@ export const createCategoryRouter = (db: DbClient) =>
         if (!parentExists) {
           throw new ORPCError('BAD_REQUEST', {
             message: 'Invalid parentId',
+            data: { reason: 'Invalid parentId' },
           });
         }
       }
@@ -54,6 +56,7 @@ export const createCategoryRouter = (db: DbClient) =>
 
         throw new ORPCError('BAD_REQUEST', {
           message: 'Failed to create category',
+          data: { reason: 'Failed to create category' },
         });
       }
     }),
@@ -85,4 +88,3 @@ export const createCategoryRouter = (db: DbClient) =>
       return roots;
     }),
   });
-

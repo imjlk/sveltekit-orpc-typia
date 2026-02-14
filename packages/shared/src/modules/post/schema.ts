@@ -1,6 +1,7 @@
 import typia from 'typia';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { SerializeForTransport } from '../../transport/serialize';
+import { attachOpenApiUnit } from '../../transport/openapi';
 import type {
   CreatePostInput,
   GetPostWithCommentsInput,
@@ -23,31 +24,43 @@ type PostWithMetaRow = PostRow & {
   postTags: Array<PostTagRow & { tag: TagRow }>;
 };
 
-export const createPostSchema = typia.createValidate<CreatePostInput>();
+export const createPostSchema = attachOpenApiUnit(
+  typia.createValidate<CreatePostInput>(),
+  typia.json.schema<CreatePostInput>(),
+);
 
-const postDtoSchema = typia.createValidate<Post>();
+const postDtoSchema = attachOpenApiUnit(typia.createValidate<Post>(), typia.json.schema<Post>());
 export const postSchema: StandardSchemaV1<PostRow, Post> = mapStandardSchema(
   postDtoSchema,
   serializeForTransport,
 );
 
-const postListDtoSchema = typia.createValidate<Post[]>();
+const postListDtoSchema = attachOpenApiUnit(typia.createValidate<Post[]>(), typia.json.schema<Post[]>());
 export const postListSchema: StandardSchemaV1<PostRow[], Post[]> = mapStandardSchema(
   postListDtoSchema,
   serializeForTransport,
 );
 
-export const getPostWithCommentsInputSchema = typia.createValidate<GetPostWithCommentsInput>();
+export const getPostWithCommentsInputSchema = attachOpenApiUnit(
+  typia.createValidate<GetPostWithCommentsInput>(),
+  typia.json.schema<GetPostWithCommentsInput>(),
+);
 
-const postWithCommentsDtoSchema = typia.createValidate<PostWithComments>();
+const postWithCommentsDtoSchema = attachOpenApiUnit(
+  typia.createValidate<PostWithComments>(),
+  typia.json.schema<PostWithComments>(),
+);
 export const postWithCommentsSchema: StandardSchemaV1<PostWithCommentsRow, PostWithComments> = mapStandardSchema(
   postWithCommentsDtoSchema,
   serializeForTransport,
 );
 
-export const getPostWithMetaInputSchema = typia.createValidate<GetPostWithMetaInput>();
+export const getPostWithMetaInputSchema = attachOpenApiUnit(
+  typia.createValidate<GetPostWithMetaInput>(),
+  typia.json.schema<GetPostWithMetaInput>(),
+);
 
-const postWithMetaDtoSchema = typia.createValidate<PostWithMeta>();
+const postWithMetaDtoSchema = attachOpenApiUnit(typia.createValidate<PostWithMeta>(), typia.json.schema<PostWithMeta>());
 export const postWithMetaSchema: StandardSchemaV1<PostWithMetaRow, PostWithMeta> = mapStandardSchema(
   postWithMetaDtoSchema,
   (row) => {

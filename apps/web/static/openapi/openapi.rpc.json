@@ -1,0 +1,832 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "sveltekit-orpc-typia (Standard RPC)",
+    "version": "0.0.0"
+  },
+  "servers": [
+    {
+      "url": "/rpc"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "PostWithComments": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "categoryId": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                },
+                "postId": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "createdAt",
+                "content",
+                "postId"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "categoryId",
+          "title",
+          "content",
+          "comments"
+        ]
+      },
+      "PostWithMeta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "categoryId": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "category": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "parentId": {
+                    "oneOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "createdAt": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "parentId",
+                  "createdAt"
+                ]
+              }
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "createdAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "categoryId",
+          "title",
+          "content",
+          "category",
+          "tags"
+        ]
+      },
+      "CategoryTreeNode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parentId": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryTreeNode"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "parentId",
+          "createdAt",
+          "children"
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/post/create": {
+      "post": {
+        "summary": "Create post",
+        "tags": [
+          "post"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "categoryId": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "createdAt",
+                        "categoryId",
+                        "title",
+                        "content"
+                      ]
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/post/list": {
+      "get": {
+        "summary": "List posts",
+        "tags": [
+          "post"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "categoryId": {
+                            "oneOf": [
+                              {
+                                "type": "null"
+                              },
+                              {
+                                "type": "number"
+                              }
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "categoryId",
+                          "title",
+                          "content"
+                        ]
+                      }
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/post/getWithComments": {
+      "get": {
+        "summary": "Get post with comments",
+        "tags": [
+          "post"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "$ref": "#/components/schemas/PostWithComments"
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/post/getWithMeta": {
+      "get": {
+        "summary": "Get post with category and tags",
+        "tags": [
+          "post"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "$ref": "#/components/schemas/PostWithMeta"
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/comment/create": {
+      "post": {
+        "summary": "Create comment",
+        "tags": [
+          "comment"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "postId": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "createdAt",
+                        "content",
+                        "postId"
+                      ]
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/comment/listByPost": {
+      "get": {
+        "summary": "List comments by post",
+        "tags": [
+          "comment"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "postId": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "content",
+                          "postId"
+                        ]
+                      }
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/category/create": {
+      "post": {
+        "summary": "Create category",
+        "tags": [
+          "category"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "parentId": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "parentId",
+                        "createdAt"
+                      ]
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/category/list": {
+      "get": {
+        "summary": "List categories",
+        "tags": [
+          "category"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "parentId": {
+                            "oneOf": [
+                              {
+                                "type": "null"
+                              },
+                              {
+                                "type": "number"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "parentId",
+                          "createdAt"
+                        ]
+                      }
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/category/tree": {
+      "get": {
+        "summary": "Get category tree",
+        "tags": [
+          "category"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoryTreeNode"
+                      }
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/tag/create": {
+      "post": {
+        "summary": "Create tag",
+        "tags": [
+          "tag"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "createdAt"
+                      ]
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/tag/list": {
+      "get": {
+        "summary": "List tags",
+        "tags": [
+          "tag"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "createdAt"
+                        ]
+                      }
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    }
+  }
+}

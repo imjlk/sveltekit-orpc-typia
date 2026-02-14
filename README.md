@@ -110,6 +110,29 @@ bun run test:e2e:solo
 E2E notes:
 - `scripts/e2e-api.ts` starts `apps/api` at `127.0.0.1:3001` with a fresh temp sqlite DB file and relies on runtime migrations.
 
+## OpenAPI + Scalar Docs
+
+Generate and check in OpenAPI specs:
+```bash
+bun run gen:openapi
+```
+
+Verify checked-in specs match the generator output:
+```bash
+bun run verify:openapi
+```
+
+Docs and spec endpoints:
+- Scalar UI (web + bun api):
+  - `/api/docs` (API spec)
+  - `/api/docs/rpc` (Standard RPC wrapper spec)
+- Spec JSON (web redirects to checked-in static files; bun api serves the checked-in files):
+  - `/api/spec.json`
+  - `/api/spec.rpc.json`
+- Checked-in spec files (served by `apps/web` static assets):
+  - `apps/web/static/openapi/openapi.api.json`
+  - `apps/web/static/openapi/openapi.rpc.json`
+
 ## Cloudflare Notes
 
 - Pages can either:

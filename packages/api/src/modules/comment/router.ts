@@ -18,6 +18,7 @@ export const createCommentRouter = (db: DbClient) =>
       if (!trimmedInput.content) {
         throw new ORPCError('BAD_REQUEST', {
           message: 'Content is required',
+          data: { reason: 'Content is required' },
         });
       }
 
@@ -30,6 +31,7 @@ export const createCommentRouter = (db: DbClient) =>
       if (!postExists) {
         throw new ORPCError('BAD_REQUEST', {
           message: 'Invalid postId',
+          data: { reason: 'Invalid postId' },
         });
       }
 
@@ -51,6 +53,7 @@ export const createCommentRouter = (db: DbClient) =>
 
         throw new ORPCError('BAD_REQUEST', {
           message: 'Failed to create comment',
+          data: { reason: 'Failed to create comment' },
         });
       }
     }),
@@ -60,4 +63,3 @@ export const createCommentRouter = (db: DbClient) =>
       });
     }),
   });
-
