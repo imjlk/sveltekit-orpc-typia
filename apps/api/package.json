@@ -3,8 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun src/index.ts",
-    "start": "bun src/index.ts"
+    "dev": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun src/index.ts",
+    "start": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun src/index.ts"
   },
   "dependencies": {
     "@orpc/server": "^1.13.5",

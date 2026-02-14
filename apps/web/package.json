@@ -4,13 +4,13 @@
 	"version": "0.0.1",
 	"type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
+    "dev": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && vite dev",
+    "build": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test:e2e": "bunx playwright test"
+    "check": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test:e2e": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx playwright test"
   },
 	"devDependencies": {
 		"@playwright/test": "^1.55.0",

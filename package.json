@@ -4,7 +4,10 @@
   "scripts": {
     "dev:api": "bun run --cwd apps/api dev",
     "dev:web": "bun run --cwd apps/web dev",
-    "dev": "bun run --filter apps/api --filter web dev"
+    "dev": "bun scripts/dev.ts",
+    "build": "bun run --cwd packages/shared build && bun run --cwd apps/web build",
+    "check": "bun run --cwd packages/shared build && bunx tsc -p apps/api/tsconfig.json --noEmit && bun run --cwd apps/web check",
+    "test:e2e": "bun run --cwd apps/web test:e2e"
   },
   "workspaces": [
     "apps/*",
