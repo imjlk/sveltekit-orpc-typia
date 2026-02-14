@@ -3,6 +3,7 @@ import { createD1Db } from '@repo/db/d1';
 
 type Env = {
   DB: D1Database;
+  ORPC_DEBUG_UPSTREAM?: string;
 };
 
 type Handlers = {
@@ -43,14 +44,25 @@ export default {
     const handlers = await getHandlers(env);
 
     if (pathname.startsWith('/rpc')) {
-      return handlers.rpc(request);
+      const res = await handlers.rpc(request);
+      if (env.ORPC_DEBUG_UPSTREAM) {
+        const headers = new Headers(res.headers);
+        headers.set('x-orpc-upstream', 'worker-content');
+        return new Response(res.body, { status: res.status, headers });
+      }
+      return res;
     }
 
     if (pathname.startsWith('/api')) {
-      return handlers.api(request);
+      const res = await handlers.api(request);
+      if (env.ORPC_DEBUG_UPSTREAM) {
+        const headers = new Headers(res.headers);
+        headers.set('x-orpc-upstream', 'worker-content');
+        return new Response(res.body, { status: res.status, headers });
+      }
+      return res;
     }
 
     return new Response('Not Found', { status: 404 });
   },
 };
-

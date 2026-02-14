@@ -15,7 +15,8 @@
     "verify:openapi": "bun run gen:openapi && git diff --exit-code apps/web/static/openapi",
     "test:e2e": "bun run --cwd apps/web test:e2e",
     "test:e2e:solo": "bun run --cwd apps/web test:e2e:solo",
-    "smoke:web:cf": "bun scripts/smoke-web-cf.ts"
+    "smoke:web:cf": "bun scripts/smoke-web-cf.ts",
+    "smoke:web:cf:services": "bun scripts/smoke-web-cf-services.ts"
   },
   "workspaces": [
     "apps/*",
