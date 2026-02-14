@@ -6,7 +6,11 @@ export const commentContract = oc.tag('comment').router({
   create: oc
     .input(createCommentSchema)
     .output(commentSchema)
-    .route({ summary: 'Create comment' })
+    .route({
+      summary: 'Create comment',
+      description:
+        'Creates a comment for a post. Input is validated and trimmed. Returns the created comment (all dates are serialized to ISO strings).',
+    })
     .errors({
       BAD_REQUEST: {
         status: 400,
@@ -17,7 +21,11 @@ export const commentContract = oc.tag('comment').router({
   listByPost: oc
     .input(listCommentsByPostSchema)
     .output(commentListSchema)
-    .route({ method: 'GET', summary: 'List comments by post' }),
+    .route({
+      method: 'GET',
+      summary: 'List comments by post',
+      description: 'Returns comments for a single post.',
+    }),
 });
 
 export type CommentContract = typeof commentContract;

@@ -6,7 +6,11 @@ export const tagContract = oc.tag('tag').router({
   create: oc
     .input(createTagSchema)
     .output(tagSchema)
-    .route({ summary: 'Create tag' })
+    .route({
+      summary: 'Create tag',
+      description:
+        'Creates a tag. Tag names are unique; repeated calls for the same name are idempotent and return the existing tag.',
+    })
     .errors({
       BAD_REQUEST: {
         status: 400,
@@ -17,7 +21,11 @@ export const tagContract = oc.tag('tag').router({
   list: oc
     .input(orpcType<void>())
     .output(tagListSchema)
-    .route({ method: 'GET', summary: 'List tags' }),
+    .route({
+      method: 'GET',
+      summary: 'List tags',
+      description: 'Returns all tags.',
+    }),
 });
 
 export type TagContract = typeof tagContract;

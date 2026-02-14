@@ -229,6 +229,7 @@
     "/post/create": {
       "post": {
         "summary": "Create post",
+        "description": "Creates a post. Input is validated and trimmed. Returns the created post (all dates are serialized to ISO strings).",
         "tags": [
           "post"
         ],
@@ -298,6 +299,7 @@
     "/post/list": {
       "get": {
         "summary": "List posts",
+        "description": "Returns all posts.",
         "tags": [
           "post"
         ],
@@ -370,6 +372,7 @@
     "/post/getWithComments": {
       "get": {
         "summary": "Get post with comments",
+        "description": "Returns a post by id, including its comments.",
         "tags": [
           "post"
         ],
@@ -408,6 +411,7 @@
     "/post/getWithMeta": {
       "get": {
         "summary": "Get post with category and tags",
+        "description": "Returns a post by id, including optional category and its tags (flattened array).",
         "tags": [
           "post"
         ],
@@ -446,6 +450,7 @@
     "/comment/create": {
       "post": {
         "summary": "Create comment",
+        "description": "Creates a comment for a post. Input is validated and trimmed. Returns the created comment (all dates are serialized to ISO strings).",
         "tags": [
           "comment"
         ],
@@ -504,6 +509,7 @@
     "/comment/listByPost": {
       "get": {
         "summary": "List comments by post",
+        "description": "Returns comments for a single post.",
         "tags": [
           "comment"
         ],
@@ -565,6 +571,7 @@
     "/category/create": {
       "post": {
         "summary": "Create category",
+        "description": "Creates a category node. Optionally links to a parent category. Returns the created category (all dates are serialized to ISO strings).",
         "tags": [
           "category"
         ],
@@ -630,6 +637,7 @@
     "/category/list": {
       "get": {
         "summary": "List categories",
+        "description": "Returns all categories as a flat list.",
         "tags": [
           "category"
         ],
@@ -698,6 +706,7 @@
     "/category/tree": {
       "get": {
         "summary": "Get category tree",
+        "description": "Returns categories as a hierarchical tree (roots with recursive children).",
         "tags": [
           "category"
         ],
@@ -739,6 +748,7 @@
     "/tag/create": {
       "post": {
         "summary": "Create tag",
+        "description": "Creates a tag. Tag names are unique; repeated calls for the same name are idempotent and return the existing tag.",
         "tags": [
           "tag"
         ],
@@ -793,6 +803,7 @@
     "/tag/list": {
       "get": {
         "summary": "List tags",
+        "description": "Returns all tags.",
         "tags": [
           "tag"
         ],
