@@ -1,5 +1,5 @@
 import { postTags, posts } from '@repo/db';
-import type { createDb } from '@repo/db';
+import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { postContract } from '@repo/shared';
 

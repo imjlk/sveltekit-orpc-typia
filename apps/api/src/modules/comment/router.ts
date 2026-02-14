@@ -1,5 +1,5 @@
 import { comments, posts } from '@repo/db';
-import type { createDb } from '@repo/db';
+import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { commentContract } from '@repo/shared';
 

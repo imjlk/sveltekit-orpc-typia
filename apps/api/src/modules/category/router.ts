@@ -1,5 +1,5 @@
 import { categories } from '@repo/db';
-import type { createDb } from '@repo/db';
+import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { categoryContract } from '@repo/shared';
 
@@ -86,4 +86,3 @@ export const createCategoryRouter = (db: DbClient) =>
       return roots;
     }),
   });
-

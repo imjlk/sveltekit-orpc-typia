@@ -1,4 +1,4 @@
-import { createDb } from '@repo/db';
+import { createDb } from '@repo/db/bun';
 import { implement } from '@orpc/server';
 import { appContract } from '@repo/shared';
 import { createCategoryRouter } from './modules/category/router';

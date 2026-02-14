@@ -1,5 +1,5 @@
 import { tags } from '@repo/db';
-import type { createDb } from '@repo/db';
+import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { tagContract } from '@repo/shared';
 
@@ -58,4 +58,3 @@ export const createTagRouter = (db: DbClient) =>
       return db.select().from(tags).all();
     }),
   });
-
