@@ -14,6 +14,10 @@
       "types": "./src/bun.ts",
       "import": "./src/bun.ts"
     },
+    "./d1": {
+      "types": "./src/d1.ts",
+      "import": "./src/d1.ts"
+    },
     "./schema": {
       "types": "./src/schema.ts",
       "import": "./src/schema.ts"

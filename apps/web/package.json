@@ -4,9 +4,9 @@
 	"version": "0.0.1",
 	"type": "module",
   "scripts": {
-    "dev": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && vite dev",
-    "build": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && vite build",
-    "preview": "vite preview",
+    "dev": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx --bun vite dev",
+    "build": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx --bun vite build",
+    "preview": "bunx --bun vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -27,6 +27,7 @@
 	"dependencies": {
 		"@orpc/client": "^1.13.5",
 		"@orpc/contract": "^1.13.5",
+		"@repo/api": "workspace:*",
 		"@repo/db": "workspace:*",
 		"@repo/shared": "workspace:*",
 		"@tanstack/svelte-form": "^1.28.0"

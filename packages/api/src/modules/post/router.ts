@@ -1,9 +1,8 @@
 import { postTags, posts } from '@repo/db';
-import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { postContract } from '@repo/shared';
+import type { DbClient } from '../../types';
 
-type DbClient = ReturnType<typeof createDb>;
 type PostInsert = typeof posts.$inferInsert;
 
 const post = implement(postContract);
@@ -23,50 +22,40 @@ export const createPostRouter = (db: DbClient) =>
         });
       }
 
-      try {
-        const createdPost = db.transaction((tx) => {
-          if (trimmedInput.categoryId != null) {
-            const categoryExists = tx.query.categories
-              .findFirst({
-              columns: { id: true },
-              where: (categoriesTable, { eq }) => eq(categoriesTable.id, trimmedInput.categoryId as number),
-              })
-              .sync();
-
-            if (!categoryExists) {
-              throw new ORPCError('BAD_REQUEST', {
-                message: 'Invalid categoryId',
-              });
-            }
-          }
-
-          const createdRows = tx.insert(posts).values(trimmedInput).returning().all();
-          const postRow = createdRows[0];
-
-          if (!postRow) {
-            throw new ORPCError('INTERNAL_SERVER_ERROR', {
-              message: 'Post creation failed',
-            });
-          }
-
-          const uniqueTagIds = Array.from(new Set(input.tagIds ?? []));
-          if (uniqueTagIds.length > 0) {
-            tx.insert(postTags)
-              .values(uniqueTagIds.map((tagId) => ({ postId: postRow.id, tagId })))
-              .onConflictDoNothing()
-              .run();
-          }
-
-          return postRow;
+      if (trimmedInput.categoryId != null) {
+        const categoryExists = await db.query.categories.findFirst({
+          columns: { id: true },
+          where: (categoriesTable, { eq }) =>
+            eq(categoriesTable.id, trimmedInput.categoryId as number),
         });
 
-        if (!createdPost) {
+        if (!categoryExists) {
+          throw new ORPCError('BAD_REQUEST', {
+            message: 'Invalid categoryId',
+          });
+        }
+      }
+
+      try {
+        const createdRows = await db.insert(posts).values(trimmedInput).returning();
+        const postRow = createdRows[0];
+
+        if (!postRow) {
           throw new ORPCError('INTERNAL_SERVER_ERROR', {
             message: 'Post creation failed',
           });
         }
 
-        return createdPost;
+        const uniqueTagIds = Array.from(new Set(input.tagIds ?? []));
+        if (uniqueTagIds.length > 0) {
+          await db
+            .insert(postTags)
+            .values(uniqueTagIds.map((tagId) => ({ postId: postRow.id, tagId })))
+            .onConflictDoNothing()
+            .run();
+        }
+
+        return postRow;
       } catch (error) {
         if (error instanceof ORPCError) {
           throw error;
@@ -118,3 +107,4 @@ export const createPostRouter = (db: DbClient) =>
       return row;
     }),
   });
+

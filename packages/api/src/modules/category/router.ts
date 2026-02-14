@@ -1,9 +1,8 @@
 import { categories } from '@repo/db';
-import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { categoryContract } from '@repo/shared';
+import type { DbClient } from '../../types';
 
-type DbClient = ReturnType<typeof createDb>;
 type CategoryRow = typeof categories.$inferSelect;
 type CategoryInsert = typeof categories.$inferInsert;
 type CategoryTreeNodeRow = CategoryRow & { children: CategoryTreeNodeRow[] };
@@ -86,3 +85,4 @@ export const createCategoryRouter = (db: DbClient) =>
       return roots;
     }),
   });
+

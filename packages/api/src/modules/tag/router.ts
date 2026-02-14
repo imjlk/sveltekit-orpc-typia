@@ -1,9 +1,8 @@
 import { tags } from '@repo/db';
-import type { createDb } from '@repo/db/bun';
 import { ORPCError, implement } from '@orpc/server';
 import { tagContract } from '@repo/shared';
+import type { DbClient } from '../../types';
 
-type DbClient = ReturnType<typeof createDb>;
 type TagInsert = typeof tags.$inferInsert;
 
 const tag = implement(tagContract);
@@ -58,3 +57,4 @@ export const createTagRouter = (db: DbClient) =>
       return db.select().from(tags).all();
     }),
   });
+

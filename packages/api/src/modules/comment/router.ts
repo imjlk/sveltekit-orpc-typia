@@ -1,9 +1,8 @@
-import { comments, posts } from '@repo/db';
-import type { createDb } from '@repo/db/bun';
+import { comments } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { commentContract } from '@repo/shared';
+import type { DbClient } from '../../types';
 
-type DbClient = ReturnType<typeof createDb>;
 type CommentInsert = typeof comments.$inferInsert;
 
 const comment = implement(commentContract);
@@ -61,3 +60,4 @@ export const createCommentRouter = (db: DbClient) =>
       });
     }),
   });
+

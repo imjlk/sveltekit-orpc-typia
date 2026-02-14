@@ -1,8 +1,7 @@
 import { serve } from 'bun';
-import { RPCHandler } from '@orpc/server/fetch';
-import { appRouter } from './router';
+import { createAppRouter, createOrpcFetchHandler } from '@repo/api';
+import { createDb } from '@repo/db/bun';
 
-const rpcHandler = new RPCHandler(appRouter);
 const port = Number(process.env.PORT ?? 3000);
 
 const corsHeaders = {
@@ -11,41 +10,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+const db = createDb();
+const appRouter = createAppRouter(db);
+const fetchHandler = createOrpcFetchHandler(appRouter, {
+  prefix: '/rpc',
+  corsHeaders,
+  healthPath: '/health',
+  context: {},
+});
+
 serve({
   port,
-  async fetch(req) {
-    const requestUrl = new URL(req.url);
-
-    if (requestUrl.pathname === '/health') {
-      return new Response('ok', { headers: corsHeaders });
-    }
-
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    const result = await rpcHandler.handle(req, {
-      prefix: '/rpc',
-      context: {},
-    });
-
-    if (!result.matched) {
-      return new Response('Not Found', {
-        status: 404,
-        headers: corsHeaders,
-      });
-    }
-
-    const responseHeaders = new Headers(result.response.headers);
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      responseHeaders.set(key, value);
-    });
-
-    return new Response(result.response.body, {
-      status: result.response.status,
-      headers: responseHeaders,
-    });
-  },
+  fetch: fetchHandler,
 });
 
 console.log(`API server running on http://localhost:${port}`);
