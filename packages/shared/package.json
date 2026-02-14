@@ -10,73 +10,29 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./modules/post/types": {
-      "types": "./dist/modules/post/types.d.ts",
-      "import": "./dist/modules/post/types.js"
+    "./modules/*/types": {
+      "types": "./dist/modules/*/types.d.ts",
+      "import": "./dist/modules/*/types.js"
     },
-    "./modules/post/schema": {
-      "types": "./dist/modules/post/schema.d.ts",
-      "import": "./dist/modules/post/schema.js"
+    "./modules/*/schema": {
+      "types": "./dist/modules/*/schema.d.ts",
+      "import": "./dist/modules/*/schema.js"
     },
-    "./modules/post/contract": {
-      "types": "./dist/modules/post/contract.d.ts",
-      "import": "./dist/modules/post/contract.js"
+    "./modules/*/contract": {
+      "types": "./dist/modules/*/contract.d.ts",
+      "import": "./dist/modules/*/contract.js"
     },
-    "./modules/post/errors": {
-      "types": "./dist/modules/post/errors.d.ts",
-      "import": "./dist/modules/post/errors.js"
+    "./modules/*/errors": {
+      "types": "./dist/modules/*/errors.d.ts",
+      "import": "./dist/modules/*/errors.js"
     },
-    "./modules/comment/types": {
-      "types": "./dist/modules/comment/types.d.ts",
-      "import": "./dist/modules/comment/types.js"
+    "./contracts/*": {
+      "types": "./dist/contracts/*.d.ts",
+      "import": "./dist/contracts/*.js"
     },
-    "./modules/comment/schema": {
-      "types": "./dist/modules/comment/schema.d.ts",
-      "import": "./dist/modules/comment/schema.js"
-    },
-    "./modules/comment/contract": {
-      "types": "./dist/modules/comment/contract.d.ts",
-      "import": "./dist/modules/comment/contract.js"
-    },
-    "./modules/comment/errors": {
-      "types": "./dist/modules/comment/errors.d.ts",
-      "import": "./dist/modules/comment/errors.js"
-    },
-    "./modules/category/types": {
-      "types": "./dist/modules/category/types.d.ts",
-      "import": "./dist/modules/category/types.js"
-    },
-    "./modules/category/schema": {
-      "types": "./dist/modules/category/schema.d.ts",
-      "import": "./dist/modules/category/schema.js"
-    },
-    "./modules/category/contract": {
-      "types": "./dist/modules/category/contract.d.ts",
-      "import": "./dist/modules/category/contract.js"
-    },
-    "./modules/category/errors": {
-      "types": "./dist/modules/category/errors.d.ts",
-      "import": "./dist/modules/category/errors.js"
-    },
-    "./modules/tag/types": {
-      "types": "./dist/modules/tag/types.d.ts",
-      "import": "./dist/modules/tag/types.js"
-    },
-    "./modules/tag/schema": {
-      "types": "./dist/modules/tag/schema.d.ts",
-      "import": "./dist/modules/tag/schema.js"
-    },
-    "./modules/tag/contract": {
-      "types": "./dist/modules/tag/contract.d.ts",
-      "import": "./dist/modules/tag/contract.js"
-    },
-    "./modules/tag/errors": {
-      "types": "./dist/modules/tag/errors.d.ts",
-      "import": "./dist/modules/tag/errors.js"
-    },
-    "./contracts/app": {
-      "types": "./dist/contracts/app.d.ts",
-      "import": "./dist/contracts/app.js"
+    "./transport/*": {
+      "types": "./dist/transport/*.d.ts",
+      "import": "./dist/transport/*.js"
     }
   },
   "scripts": {
