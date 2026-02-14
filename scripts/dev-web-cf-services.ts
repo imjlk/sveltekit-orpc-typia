@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 
 import { applyLocalD1Migrations } from './_cf-d1-migrations';
+import { readFileSync } from 'node:fs';
 
 type ProcSpec = {
   name: string;
@@ -21,10 +22,32 @@ const drizzleDir = resolve(root, 'packages/db/drizzle');
 // Shared persistence directory so Pages + both Workers see the same local D1 database.
 const persistDir = resolve(root, process.env.CF_PERSIST_DIR ?? 'apps/web/.wrangler/state');
 
-const workerContentName = 'sveltekit-orpc-typia-worker-content';
-const workerMetaName = 'sveltekit-orpc-typia-worker-meta';
-
 const log = (...args: unknown[]) => console.log('[dev:web:cf:services]', ...args);
+
+const readTomlString = (tomlText: string, key: string): string | undefined => {
+  const re = new RegExp(`^\\s*${key}\\s*=\\s*\"([^\"]+)\"\\s*$`, 'm');
+  return tomlText.match(re)?.[1];
+};
+
+const readWranglerTomlInfo = (filePath: string) => {
+  const text = readFileSync(filePath, 'utf8');
+  const name = readTomlString(text, 'name');
+  const databaseId = readTomlString(text, 'database_id');
+  return { name, databaseId };
+};
+
+const ensureSharedD1Config = (ids: Array<{ filePath: string; databaseId?: string }>) => {
+  const present = ids.filter((v) => typeof v.databaseId === 'string') as Array<{ filePath: string; databaseId: string }>;
+  if (present.length < 2) return;
+
+  const unique = new Set(present.map((v) => v.databaseId));
+  if (unique.size <= 1) return;
+
+  const details = present.map((v) => `${v.filePath}: ${v.databaseId}`).join('\n');
+  throw new Error(
+    `D1 database_id mismatch across wrangler.toml files.\n\nAll apps must point to the same D1 to share local state:\n${details}`,
+  );
+};
 
 const prefixLine = (name: string, line: string) => {
   const trimmed = line.replace(/\r?\n$/, '');
@@ -107,6 +130,23 @@ process.on('SIGTERM', () => {
 
 try {
   log('persistDir:', persistDir);
+
+  const webWranglerToml = resolve(root, 'apps/web/wrangler.toml');
+  const contentWranglerToml = resolve(root, 'apps/worker-content/wrangler.toml');
+  const metaWranglerToml = resolve(root, 'apps/worker-meta/wrangler.toml');
+
+  const webInfo = readWranglerTomlInfo(webWranglerToml);
+  const contentInfo = readWranglerTomlInfo(contentWranglerToml);
+  const metaInfo = readWranglerTomlInfo(metaWranglerToml);
+
+  ensureSharedD1Config([
+    { filePath: webWranglerToml, databaseId: webInfo.databaseId },
+    { filePath: contentWranglerToml, databaseId: contentInfo.databaseId },
+    { filePath: metaWranglerToml, databaseId: metaInfo.databaseId },
+  ]);
+
+  const workerContentName = contentInfo.name ?? 'sveltekit-orpc-typia-worker-content';
+  const workerMetaName = metaInfo.name ?? 'sveltekit-orpc-typia-worker-meta';
 
   // Build Pages output.
   await run(['bun', 'run', '--cwd', webCwd, 'build'], root);
