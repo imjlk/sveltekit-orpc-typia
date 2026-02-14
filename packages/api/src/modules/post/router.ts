@@ -2,7 +2,7 @@ import { postTags, posts } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { postContract } from '@repo/shared';
 import { badRequest, internalError, notFound } from '../../lib/errors';
-import { dedupeNumbers, trimRequired } from '../../lib/input';
+import { normalizeCreatePostInput } from './normalize';
 import type { DbClient } from '../../types';
 
 type PostInsert = typeof posts.$inferInsert;
@@ -12,17 +12,18 @@ const post = implement(postContract);
 export const createPostRouter = (db: DbClient) =>
   post.router({
     create: post.create.handler(async ({ input }) => {
-      const trimmedInput: Pick<PostInsert, 'title' | 'content' | 'categoryId'> = {
-        title: trimRequired('Title', input.title),
-        content: trimRequired('Content', input.content),
-        categoryId: input.categoryId ?? null,
+      const normalized = normalizeCreatePostInput(input);
+      const insertInput: Pick<PostInsert, 'title' | 'content' | 'categoryId'> = {
+        title: normalized.title,
+        content: normalized.content,
+        categoryId: normalized.categoryId,
       };
 
-      if (trimmedInput.categoryId != null) {
+      if (insertInput.categoryId != null) {
         const categoryExists = await db.query.categories.findFirst({
           columns: { id: true },
           where: (categoriesTable, { eq }) =>
-            eq(categoriesTable.id, trimmedInput.categoryId as number),
+            eq(categoriesTable.id, insertInput.categoryId as number),
         });
 
         if (!categoryExists) {
@@ -31,14 +32,14 @@ export const createPostRouter = (db: DbClient) =>
       }
 
       try {
-        const createdRows = await db.insert(posts).values(trimmedInput).returning();
+        const createdRows = await db.insert(posts).values(insertInput).returning();
         const postRow = createdRows[0];
 
         if (!postRow) {
           throw internalError('Post creation failed');
         }
 
-        const uniqueTagIds = dedupeNumbers(input.tagIds ?? []);
+        const uniqueTagIds = normalized.tagIds;
         if (uniqueTagIds.length > 0) {
           await db
             .insert(postTags)

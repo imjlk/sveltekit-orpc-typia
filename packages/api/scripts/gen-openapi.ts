@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import type { AnyContractProcedure, AnyContractRouter, AnySchema, OpenAPI } from '@orpc/contract';
 import { isContractProcedure } from '@orpc/contract';
 import { OpenAPIGenerator, toOpenAPISchema, type ConditionalSchemaConverter } from '@orpc/openapi';
-import type { JSONSchema } from 'json-schema-typed/draft-2020-12';
+import type { JSONSchema } from 'json-schema-typed';
 
 import { appContract, getOpenApiUnit, OPENAPI_TAG_DEFINITIONS } from '@repo/shared';
 

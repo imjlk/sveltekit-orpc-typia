@@ -1,7 +1,6 @@
 import typia from 'typia';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { SerializeForTransport } from '../../transport/serialize';
-import { attachOpenApiUnit } from '../../transport/openapi';
 import type {
   CreatePostInput,
   GetPostWithCommentsInput,
@@ -11,7 +10,7 @@ import type {
   PostWithMeta,
 } from './types';
 import { serializeForTransport } from '../../transport/serialize';
-import { mapStandardSchema } from '../../transport/standard';
+import { typiaMappedSchema, typiaSchema } from '../../transport/typia';
 
 type PostRow = import('@repo/db/schema-types').PostRow;
 type CategoryRow = import('@repo/db/schema-types').CategoryRow;
@@ -24,44 +23,41 @@ type PostWithMetaRow = PostRow & {
   postTags: Array<PostTagRow & { tag: TagRow }>;
 };
 
-export const createPostSchema = attachOpenApiUnit(
+export const createPostSchema = typiaSchema(
   typia.createValidate<CreatePostInput>(),
   typia.json.schema<CreatePostInput>(),
 );
 
-const postDtoSchema = attachOpenApiUnit(typia.createValidate<Post>(), typia.json.schema<Post>());
-export const postSchema: StandardSchemaV1<PostRow, Post> = mapStandardSchema(
-  postDtoSchema,
-  serializeForTransport,
-);
+const postDtoSchema = typiaSchema(typia.createValidate<Post>(), typia.json.schema<Post>());
+export const postSchema: StandardSchemaV1<PostRow, Post> = typiaMappedSchema(postDtoSchema, serializeForTransport);
 
-const postListDtoSchema = attachOpenApiUnit(typia.createValidate<Post[]>(), typia.json.schema<Post[]>());
-export const postListSchema: StandardSchemaV1<PostRow[], Post[]> = mapStandardSchema(
+const postListDtoSchema = typiaSchema(typia.createValidate<Post[]>(), typia.json.schema<Post[]>());
+export const postListSchema: StandardSchemaV1<PostRow[], Post[]> = typiaMappedSchema(
   postListDtoSchema,
   serializeForTransport,
 );
 
-export const getPostWithCommentsInputSchema = attachOpenApiUnit(
+export const getPostWithCommentsInputSchema = typiaSchema(
   typia.createValidate<GetPostWithCommentsInput>(),
   typia.json.schema<GetPostWithCommentsInput>(),
 );
 
-const postWithCommentsDtoSchema = attachOpenApiUnit(
+const postWithCommentsDtoSchema = typiaSchema(
   typia.createValidate<PostWithComments>(),
   typia.json.schema<PostWithComments>(),
 );
-export const postWithCommentsSchema: StandardSchemaV1<PostWithCommentsRow, PostWithComments> = mapStandardSchema(
+export const postWithCommentsSchema: StandardSchemaV1<PostWithCommentsRow, PostWithComments> = typiaMappedSchema(
   postWithCommentsDtoSchema,
   serializeForTransport,
 );
 
-export const getPostWithMetaInputSchema = attachOpenApiUnit(
+export const getPostWithMetaInputSchema = typiaSchema(
   typia.createValidate<GetPostWithMetaInput>(),
   typia.json.schema<GetPostWithMetaInput>(),
 );
 
-const postWithMetaDtoSchema = attachOpenApiUnit(typia.createValidate<PostWithMeta>(), typia.json.schema<PostWithMeta>());
-export const postWithMetaSchema: StandardSchemaV1<PostWithMetaRow, PostWithMeta> = mapStandardSchema(
+const postWithMetaDtoSchema = typiaSchema(typia.createValidate<PostWithMeta>(), typia.json.schema<PostWithMeta>());
+export const postWithMetaSchema: StandardSchemaV1<PostWithMetaRow, PostWithMeta> = typiaMappedSchema(
   postWithMetaDtoSchema,
   (row) => {
     const serialized = serializeForTransport(row) as SerializeForTransport<PostWithMetaRow>;

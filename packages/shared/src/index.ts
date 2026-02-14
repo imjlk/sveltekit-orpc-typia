@@ -1,6 +1,7 @@
 export type { SerializeForTransport } from './transport/serialize';
 export { serializeForTransport } from './transport/serialize';
 export * from './transport/openapi';
+export * from './transport/typia';
 export * from './transport/scalar';
 export * from './errors/types';
 export * from './errors/schema';

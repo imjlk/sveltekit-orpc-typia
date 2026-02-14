@@ -2,7 +2,7 @@ import { comments } from '@repo/db';
 import { ORPCError, implement } from '@orpc/server';
 import { commentContract } from '@repo/shared';
 import { badRequest, internalError } from '../../lib/errors';
-import { trimRequired } from '../../lib/input';
+import { normalizeCreateCommentInput } from './normalize';
 import type { DbClient } from '../../types';
 
 type CommentInsert = typeof comments.$inferInsert;
@@ -12,15 +12,16 @@ const comment = implement(commentContract);
 export const createCommentRouter = (db: DbClient) =>
   comment.router({
     create: comment.create.handler(async ({ input }) => {
-      const trimmedInput: Pick<CommentInsert, 'postId' | 'content'> = {
-        postId: input.postId,
-        content: trimRequired('Content', input.content),
+      const normalized = normalizeCreateCommentInput(input);
+      const insertInput: Pick<CommentInsert, 'postId' | 'content'> = {
+        postId: normalized.postId,
+        content: normalized.content,
       };
 
       // Optional: validate post exists early to return a nicer error.
       const postExists = await db.query.posts.findFirst({
         columns: { id: true },
-        where: (postsTable, { eq }) => eq(postsTable.id, trimmedInput.postId),
+        where: (postsTable, { eq }) => eq(postsTable.id, insertInput.postId),
       });
 
       if (!postExists) {
@@ -28,7 +29,7 @@ export const createCommentRouter = (db: DbClient) =>
       }
 
       try {
-        const createdRows = await db.insert(comments).values(trimmedInput).returning();
+        const createdRows = await db.insert(comments).values(insertInput).returning();
         const createdComment = createdRows[0];
 
         if (!createdComment) {

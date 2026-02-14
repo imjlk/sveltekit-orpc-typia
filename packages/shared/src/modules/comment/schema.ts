@@ -1,29 +1,25 @@
 import typia from 'typia';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { Comment, CreateCommentInput, ListCommentsByPostInput } from './types';
-import { attachOpenApiUnit } from '../../transport/openapi';
 import { serializeForTransport } from '../../transport/serialize';
-import { mapStandardSchema } from '../../transport/standard';
+import { typiaMappedSchema, typiaSchema } from '../../transport/typia';
 
 type CommentRow = import('@repo/db/schema-types').CommentRow;
 
-export const createCommentSchema = attachOpenApiUnit(
+export const createCommentSchema = typiaSchema(
   typia.createValidate<CreateCommentInput>(),
   typia.json.schema<CreateCommentInput>(),
 );
-export const listCommentsByPostSchema = attachOpenApiUnit(
+export const listCommentsByPostSchema = typiaSchema(
   typia.createValidate<ListCommentsByPostInput>(),
   typia.json.schema<ListCommentsByPostInput>(),
 );
 
-const commentDtoSchema = attachOpenApiUnit(typia.createValidate<Comment>(), typia.json.schema<Comment>());
-export const commentSchema: StandardSchemaV1<CommentRow, Comment> = mapStandardSchema(
-  commentDtoSchema,
-  serializeForTransport,
-);
+const commentDtoSchema = typiaSchema(typia.createValidate<Comment>(), typia.json.schema<Comment>());
+export const commentSchema: StandardSchemaV1<CommentRow, Comment> = typiaMappedSchema(commentDtoSchema, serializeForTransport);
 
-const commentListDtoSchema = attachOpenApiUnit(typia.createValidate<Comment[]>(), typia.json.schema<Comment[]>());
-export const commentListSchema: StandardSchemaV1<CommentRow[], Comment[]> = mapStandardSchema(
+const commentListDtoSchema = typiaSchema(typia.createValidate<Comment[]>(), typia.json.schema<Comment[]>());
+export const commentListSchema: StandardSchemaV1<CommentRow[], Comment[]> = typiaMappedSchema(
   commentListDtoSchema,
   serializeForTransport,
 );
