@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 import unpluginTypia from '@kennethwkz/unplugin-typia/esbuild';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/modules/post/types.ts', 'src/modules/post/schema.ts', 'src/modules/post/contract.ts', 'src/modules/post/errors.ts'],
+  entry: ['src/index.ts', 'src/modules/**/*.ts', 'src/contracts/**/*.ts', 'src/transport/**/*.ts'],
   format: 'esm',
   dts: true,
   clean: true,

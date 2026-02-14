@@ -1,4 +1,11 @@
-export * from './modules/post/types';
+export type { SerializeForTransport } from './transport/serialize';
+export { serializeForTransport } from './transport/serialize';
+export type { CreatePostInput, GetPostWithCommentsInput, Post, PostWithComments } from './modules/post/types';
+export type { Comment, CreateCommentInput, ListCommentsByPostInput } from './modules/comment/types';
 export * from './modules/post/schema';
 export * from './modules/post/errors';
 export * from './modules/post/contract';
+export * from './modules/comment/schema';
+export * from './modules/comment/errors';
+export * from './modules/comment/contract';
+export * from './contracts/app';

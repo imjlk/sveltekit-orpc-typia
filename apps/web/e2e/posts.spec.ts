@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 import { createORPCClient } from '@orpc/client';
 import { RPCLink } from '@orpc/client/fetch';
 import type { ContractRouterClient } from '@orpc/contract';
-import { postContract } from '@repo/shared';
+import { appContract } from '@repo/shared';
 
 test.describe('Posts Flow', () => {
   const apiUrl = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/rpc';
-  const client: ContractRouterClient<typeof postContract> = createORPCClient(
+  const client: ContractRouterClient<typeof appContract> = createORPCClient(
     new RPCLink({ url: apiUrl }),
   );
 

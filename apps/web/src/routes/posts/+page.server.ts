@@ -1,12 +1,12 @@
-import { client } from '$lib/client';
+import { createPost, listPosts } from '$lib/server/modules/post/service';
 import { createPostSchema } from '@repo/shared/modules/post/schema';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import type { CreatePostInput } from '@repo/shared';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event) => {
 	try {
-		const posts = await client.post.list();
+		const posts = await listPosts(event);
 		return { posts };
 	} catch (error) {
 		console.error('Failed to load posts:', error);
@@ -49,7 +49,8 @@ const mapFieldErrors = (
 };
 
 export const actions: Actions = {
-	default: async ({ request }) => {
+	default: async (event) => {
+		const { request } = event;
 		const formData = await request.formData();
 		const title = String(formData.get('title') ?? '');
 		const content = String(formData.get('content') ?? '');
@@ -69,7 +70,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await client.post.create(input);
+			await createPost(event, input);
 			return {
 				values: { title: '', content: '' },
 				fieldErrors: {} as Partial<Record<keyof CreatePostInput, string>>,

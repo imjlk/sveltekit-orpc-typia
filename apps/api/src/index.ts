@@ -1,8 +1,8 @@
 import { serve } from 'bun';
 import { RPCHandler } from '@orpc/server/fetch';
-import { postRouter } from './router';
+import { appRouter } from './router';
 
-const rpcHandler = new RPCHandler(postRouter);
+const rpcHandler = new RPCHandler(appRouter);
 const port = Number(process.env.PORT ?? 3000);
 
 const corsHeaders = {

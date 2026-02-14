@@ -5,6 +5,20 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./schema": {
+      "types": "./src/schema.ts",
+      "import": "./src/schema.ts"
+    },
+    "./schema-types": {
+      "types": "./src/schema-types.ts",
+      "import": "./src/schema-types.ts"
+    }
+  },
   "scripts": {
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",

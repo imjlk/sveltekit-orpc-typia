@@ -1,13 +1,22 @@
 import type { tags } from 'typia';
 
-export interface Post {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
-}
+type PostRow = import('@repo/db/schema-types').PostRow;
+import type { SerializeForTransport } from '../../transport/serialize';
+import type { Comment } from '../comment/types';
 
-export interface CreatePostInput {
-  title: string & tags.MinLength<1>;
-  content: string & tags.MinLength<1>;
-}
+export type Post = SerializeForTransport<PostRow>;
+
+export type CreatePostInput = {
+  title: PostRow['title'] & tags.MinLength<1>;
+  content: PostRow['content'] & tags.MinLength<1>;
+};
+
+export type GetPostWithCommentsInput = {
+  id: PostRow['id'];
+};
+
+export type PostWithComments = Post & {
+  comments: Comment[];
+};
+
+export type { SerializeForTransport };

@@ -15,7 +15,7 @@ export default defineConfig({
 			timeout: 120_000
 		},
 		{
-			command: 'VITE_API_URL=http://127.0.0.1:3001/rpc bun run dev -- --host 127.0.0.1 --port 5173',
+			command: 'ORPC_API_URL=http://127.0.0.1:3001/rpc bun run dev -- --host 127.0.0.1 --port 5173',
 			url: 'http://127.0.0.1:5173',
 			reuseExistingServer: true,
 			timeout: 120_000

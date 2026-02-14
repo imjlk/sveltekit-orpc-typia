@@ -27,6 +27,7 @@
 	"dependencies": {
 		"@orpc/client": "^1.13.5",
 		"@orpc/contract": "^1.13.5",
+		"@repo/db": "workspace:*",
 		"@repo/shared": "workspace:*",
 		"@tanstack/svelte-form": "^1.28.0"
 	}

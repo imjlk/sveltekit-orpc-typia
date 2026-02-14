@@ -25,6 +25,26 @@
     "./modules/post/errors": {
       "types": "./dist/modules/post/errors.d.ts",
       "import": "./dist/modules/post/errors.js"
+    },
+    "./modules/comment/types": {
+      "types": "./dist/modules/comment/types.d.ts",
+      "import": "./dist/modules/comment/types.js"
+    },
+    "./modules/comment/schema": {
+      "types": "./dist/modules/comment/schema.d.ts",
+      "import": "./dist/modules/comment/schema.js"
+    },
+    "./modules/comment/contract": {
+      "types": "./dist/modules/comment/contract.d.ts",
+      "import": "./dist/modules/comment/contract.js"
+    },
+    "./modules/comment/errors": {
+      "types": "./dist/modules/comment/errors.d.ts",
+      "import": "./dist/modules/comment/errors.js"
+    },
+    "./contracts/app": {
+      "types": "./dist/contracts/app.d.ts",
+      "import": "./dist/contracts/app.js"
     }
   },
   "scripts": {
@@ -42,6 +62,7 @@
   "dependencies": {
     "@orpc/contract": "^1.13.5",
     "@orpc/server": "^1.13.5",
+    "@repo/db": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
     "typia": "^11.0.3"
   }
