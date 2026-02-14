@@ -14,6 +14,30 @@ const outDir = resolve(repoRoot, 'apps/web/static/openapi');
 
 const OPENAPI_VERSION = '3.1.1' as const;
 
+const API_INFO_DESCRIPTION = `Contract-first API docs generated from oRPC contracts.
+
+- REST(OpenAPI-style): \`/api/<router>/<procedure>\`
+- Standard RPC: \`/rpc/<router>/<procedure>\` (documented separately)
+- Specs:
+  - \`/openapi/openapi.api.json\` (REST)
+  - \`/openapi/openapi.rpc.json\` (Standard RPC wrapper)
+`;
+
+const RPC_INFO_DESCRIPTION = `Standard RPC protocol docs for this repo.
+
+This spec describes the \`/rpc\` endpoints but the payload is wrapped:
+
+- Request body: \`{ "json": <input>, "meta"?: [...] }\`
+- Response body: \`{ "json": <output>, "meta"?: [...] }\`
+`;
+
+const TAG_DEFINITIONS: Array<{ name: string; description: string }> = [
+  { name: 'post', description: 'Posts domain procedures.' },
+  { name: 'comment', description: 'Comments domain procedures.' },
+  { name: 'category', description: 'Hierarchical categories (tree) procedures.' },
+  { name: 'tag', description: 'Flat tags procedures.' },
+];
+
 const stringify = (value: unknown) => JSON.stringify(value, null, 2) + '\n';
 const deepEqualJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -92,11 +116,16 @@ const generateApiSpec = async () => {
   });
 
   const doc = await generator.generate(appContract as never, {
-    info: { title: 'sveltekit-orpc-typia', version: process.env.APP_VERSION ?? '0.0.0' },
+    info: {
+      title: 'sveltekit-orpc-typia',
+      version: process.env.APP_VERSION ?? '0.0.0',
+      description: API_INFO_DESCRIPTION,
+    },
     servers: [{ url: '/api' }],
   });
 
   doc.openapi = OPENAPI_VERSION;
+  doc.tags = TAG_DEFINITIONS;
   doc.components ??= {};
   doc.components.schemas ??= {};
 
@@ -110,8 +139,13 @@ const generateApiSpec = async () => {
 const generateRpcSpec = async () => {
   const doc: OpenAPI.Document = {
     openapi: OPENAPI_VERSION,
-    info: { title: 'sveltekit-orpc-typia (Standard RPC)', version: process.env.APP_VERSION ?? '0.0.0' },
+    info: {
+      title: 'sveltekit-orpc-typia (Standard RPC)',
+      version: process.env.APP_VERSION ?? '0.0.0',
+      description: RPC_INFO_DESCRIPTION,
+    },
     servers: [{ url: '/rpc' }],
+    tags: TAG_DEFINITIONS,
     components: { schemas: {} },
     paths: {},
   };

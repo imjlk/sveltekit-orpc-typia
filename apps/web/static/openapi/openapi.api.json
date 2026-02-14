@@ -1,7 +1,8 @@
 {
   "info": {
     "title": "sveltekit-orpc-typia",
-    "version": "0.0.0"
+    "version": "0.0.0",
+    "description": "Contract-first API docs generated from oRPC contracts.\n\n- REST(OpenAPI-style): `/api/<router>/<procedure>`\n- Standard RPC: `/rpc/<router>/<procedure>` (documented separately)\n- Specs:\n  - `/openapi/openapi.api.json` (REST)\n  - `/openapi/openapi.rpc.json` (Standard RPC wrapper)\n"
   },
   "servers": [
     {
@@ -805,6 +806,24 @@
       }
     }
   },
+  "tags": [
+    {
+      "name": "post",
+      "description": "Posts domain procedures."
+    },
+    {
+      "name": "comment",
+      "description": "Comments domain procedures."
+    },
+    {
+      "name": "category",
+      "description": "Hierarchical categories (tree) procedures."
+    },
+    {
+      "name": "tag",
+      "description": "Flat tags procedures."
+    }
+  ],
   "components": {
     "schemas": {
       "PostWithComments": {

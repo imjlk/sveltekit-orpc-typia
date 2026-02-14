@@ -2,11 +2,30 @@
   "openapi": "3.1.1",
   "info": {
     "title": "sveltekit-orpc-typia (Standard RPC)",
-    "version": "0.0.0"
+    "version": "0.0.0",
+    "description": "Standard RPC protocol docs for this repo.\n\nThis spec describes the `/rpc` endpoints but the payload is wrapped:\n\n- Request body: `{ \"json\": <input>, \"meta\"?: [...] }`\n- Response body: `{ \"json\": <output>, \"meta\"?: [...] }`\n"
   },
   "servers": [
     {
       "url": "/rpc"
+    }
+  ],
+  "tags": [
+    {
+      "name": "post",
+      "description": "Posts domain procedures."
+    },
+    {
+      "name": "comment",
+      "description": "Comments domain procedures."
+    },
+    {
+      "name": "category",
+      "description": "Hierarchical categories (tree) procedures."
+    },
+    {
+      "name": "tag",
+      "description": "Flat tags procedures."
     }
   ],
   "components": {
