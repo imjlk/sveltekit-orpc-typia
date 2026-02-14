@@ -10,6 +10,14 @@ test.describe('Posts Flow', () => {
     new RPCLink({ url: apiUrl }),
   );
 
+  test('should respond to OpenAPI /api endpoint', async ({ request }) => {
+    const res = await request.get('/api/post/list');
+    expect(res.ok()).toBe(true);
+
+    const json = await res.json();
+    expect(Array.isArray(json)).toBe(true);
+  });
+
   test('should load posts on page load', async () => {
     const response = await client.post.list();
     expect(Array.isArray(response)).toBe(true);
