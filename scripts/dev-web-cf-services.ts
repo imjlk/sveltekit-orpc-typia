@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import { applyLocalD1Migrations } from './_cf-d1-migrations';
 
 type ProcSpec = {
   name: string;
@@ -19,7 +20,6 @@ const drizzleDir = resolve(root, 'packages/db/drizzle');
 
 // Shared persistence directory so Pages + both Workers see the same local D1 database.
 const persistDir = resolve(root, process.env.CF_PERSIST_DIR ?? 'apps/web/.wrangler/state');
-const appliedMigrationsPath = resolve(persistDir, '.drizzle-migrations.applied.json');
 
 const workerContentName = 'sveltekit-orpc-typia-worker-content';
 const workerMetaName = 'sveltekit-orpc-typia-worker-meta';
@@ -83,67 +83,6 @@ const run = async (cmd: string[], cwd: string) => {
   }
 };
 
-const readApplied = (): string[] => {
-  try {
-    const text = readFileSync(appliedMigrationsPath, 'utf8');
-    const json = JSON.parse(text) as unknown;
-    if (Array.isArray(json) && json.every((v) => typeof v === 'string')) return json;
-  } catch {
-    // ignore
-  }
-  return [];
-};
-
-const writeApplied = (applied: string[]) => {
-  writeFileSync(appliedMigrationsPath, JSON.stringify(applied, null, 2) + '\n', 'utf8');
-};
-
-const listMigrations = (): string[] =>
-  readdirSync(drizzleDir)
-    .filter((f) => f.endsWith('.sql'))
-    .sort();
-
-const applyPendingMigrations = async () => {
-  mkdirSync(persistDir, { recursive: true });
-
-  const migrationFiles = listMigrations();
-  if (migrationFiles.length === 0) {
-    throw new Error(`No migration SQL files found in ${drizzleDir}`);
-  }
-
-  const applied = readApplied();
-  const pending = migrationFiles.filter((f) => !applied.includes(f));
-
-  if (pending.length === 0) {
-    log('migrations: up-to-date');
-    return;
-  }
-
-  for (const file of pending) {
-    const abs = resolve(drizzleDir, file);
-    log('apply migration:', file);
-    await run(
-      [
-        'bunx',
-        'wrangler',
-        'd1',
-        'execute',
-        'DB',
-        '--local',
-        '--persist-to',
-        persistDir,
-        '--file',
-        abs,
-        '--yes',
-      ],
-      webCwd,
-    );
-
-    applied.push(file);
-    writeApplied(applied);
-  }
-};
-
 const children: Array<ReturnType<typeof Bun.spawn>> = [];
 
 const shutdown = () => {
@@ -173,7 +112,7 @@ try {
   await run(['bun', 'run', '--cwd', webCwd, 'build'], root);
 
   // Prepare local D1 schema once, then let the dev servers reuse it.
-  await applyPendingMigrations();
+  await applyLocalD1Migrations({ webCwd, drizzleDir, persistDir, log });
 
   children.push(
     spawnPrefixed({
@@ -181,6 +120,7 @@ try {
       cwd: resolve(root, 'apps/worker-content'),
       cmd: [
         'bunx',
+        '--silent',
         'wrangler',
         'dev',
         '--local',
@@ -202,6 +142,7 @@ try {
       cwd: resolve(root, 'apps/worker-meta'),
       cmd: [
         'bunx',
+        '--silent',
         'wrangler',
         'dev',
         '--local',
@@ -223,6 +164,7 @@ try {
       cwd: webCwd,
       cmd: [
         'bunx',
+        '--silent',
         'wrangler',
         'pages',
         'dev',
@@ -256,4 +198,3 @@ try {
   console.error(err);
   process.exit(1);
 }
-
