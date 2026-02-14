@@ -48,6 +48,10 @@ bun run dev:web:cf
 Cloudflare notes:
 - Update `apps/web/wrangler.toml` with your D1 `database_name` / `database_id`.
 - Put secrets in `apps/web/.dev.vars` (see `apps/web/.dev.vars.example`). Wrangler will load `.dev.vars` automatically.
+- Quick smoke (local Pages runtime + local D1 + migrations):
+```bash
+bun run smoke:web:cf
+```
 
 ## RPC Routing (apps/web)
 
