@@ -1,7 +1,8 @@
 export type ErrorIssue = {
   message: string;
-  // StandardSchema issue paths can contain richer segments; keep this permissive.
-  path?: unknown[];
+  // Normalized path segments (StandardSchemaV1.PathSegment.key is flattened to its key).
+  // Keep it JSON-friendly for transport + OpenAPI.
+  path?: Array<string | number>;
 };
 
 export type BadRequestData = {
@@ -13,4 +14,3 @@ export type NotFoundData = {
   resource?: string;
   id?: number;
 };
-

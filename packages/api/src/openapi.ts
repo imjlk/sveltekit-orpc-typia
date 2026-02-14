@@ -1,4 +1,5 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
+import { normalizeOrpcErrorForTransport } from './lib/errors';
 
 type CorsHeaders = Record<string, string>;
 
@@ -28,28 +29,26 @@ export const createOpenApiFetchHandler = <TContext extends Record<string, unknow
   const nodeEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
   const logErrors = options.logErrors ?? (nodeEnv ? nodeEnv.NODE_ENV !== 'production' : false);
 
-  const handler = new OpenAPIHandler<TContext>(
-    router as never,
-    logErrors
-      ? ({
-          interceptors: [
-            async (interceptorOptions: { request: { method: string; url: URL }; next: () => unknown }) => {
-              try {
-                return await interceptorOptions.next();
-              } catch (error) {
-                console.error(
-                  '[openapi]',
-                  interceptorOptions.request.method,
-                  interceptorOptions.request.url.toString(),
-                  error,
-                );
-                throw error;
-              }
-            },
-          ],
-        } as never)
-      : undefined,
-  );
+  const handler = new OpenAPIHandler<TContext>(router as never, {
+    interceptors: [
+      async (interceptorOptions: { request: { method: string; url: URL }; next: () => unknown }) => {
+        try {
+          return await interceptorOptions.next();
+        } catch (error) {
+          const normalized = normalizeOrpcErrorForTransport(error);
+          if (logErrors) {
+            console.error(
+              '[openapi]',
+              interceptorOptions.request.method,
+              interceptorOptions.request.url.toString(),
+              normalized,
+            );
+          }
+          throw normalized;
+        }
+      },
+    ],
+  } as never);
 
   const prefix = options.prefix ?? '/api';
   const healthPath = options.healthPath ?? '/health';
@@ -105,4 +104,3 @@ export const createOpenApiFetchHandler = <TContext extends Record<string, unknow
     });
   };
 };
-
