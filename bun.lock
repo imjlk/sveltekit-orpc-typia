@@ -43,6 +43,32 @@
         "wrangler": "^4.0.0",
       },
     },
+    "apps/worker-content": {
+      "name": "worker-content",
+      "dependencies": {
+        "@repo/api": "workspace:*",
+        "@repo/db": "workspace:*",
+        "@repo/shared": "workspace:*",
+      },
+      "devDependencies": {
+        "@cloudflare/workers-types": "^4.0.0",
+        "typescript": "^5.9.3",
+        "wrangler": "^4.0.0",
+      },
+    },
+    "apps/worker-meta": {
+      "name": "worker-meta",
+      "dependencies": {
+        "@repo/api": "workspace:*",
+        "@repo/db": "workspace:*",
+        "@repo/shared": "workspace:*",
+      },
+      "devDependencies": {
+        "@cloudflare/workers-types": "^4.0.0",
+        "typescript": "^5.9.3",
+        "wrangler": "^4.0.0",
+      },
+    },
     "packages/api": {
       "name": "@repo/api",
       "dependencies": {
@@ -753,6 +779,10 @@
     "web": ["web@workspace:apps/web"],
 
     "webpack-virtual-modules": ["webpack-virtual-modules@0.6.2", "", {}, "sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ=="],
+
+    "worker-content": ["worker-content@workspace:apps/worker-content"],
+
+    "worker-meta": ["worker-meta@workspace:apps/worker-meta"],
 
     "workerd": ["workerd@1.20260212.0", "", { "optionalDependencies": { "@cloudflare/workerd-darwin-64": "1.20260212.0", "@cloudflare/workerd-darwin-arm64": "1.20260212.0", "@cloudflare/workerd-linux-64": "1.20260212.0", "@cloudflare/workerd-linux-arm64": "1.20260212.0", "@cloudflare/workerd-windows-64": "1.20260212.0" }, "bin": { "workerd": "bin/workerd" } }, "sha512-4B9BoZUzKSRv3pVZGEPh7OX+Q817hpUqAUtz5O0TxJVqo4OsYJAUA/sY177Q5ha/twjT9KaJt2DtQzE+oyCOzw=="],
 
