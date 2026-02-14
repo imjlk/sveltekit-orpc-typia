@@ -6,6 +6,10 @@ type ServiceBinding = {
 	fetch: (request: Request) => Promise<Response>;
 };
 
+type D1DatabaseLike = {
+	prepare: (query: string) => unknown;
+};
+
 type Upstream =
 	| { kind: 'binding'; binding: ServiceBinding }
 	| { kind: 'url'; url: string }
@@ -18,6 +22,12 @@ const normalizeRpcUrl = (value: string) => {
 
 const isServiceBinding = (value: unknown): value is ServiceBinding =>
 	!!value && typeof value === 'object' && 'fetch' in value && typeof (value as { fetch?: unknown }).fetch === 'function';
+
+const isD1Database = (value: unknown): value is D1DatabaseLike =>
+	!!value &&
+	typeof value === 'object' &&
+	'prepare' in value &&
+	typeof (value as { prepare?: unknown }).prepare === 'function';
 
 const resolvePlatformEnv = (platform: RequestEvent['platform']): Record<string, unknown> | undefined =>
 	(platform as { env?: Record<string, unknown> } | undefined)?.env;
@@ -102,11 +112,13 @@ const getLocalHandler = async (platform: RequestEvent['platform']) => {
 	localHandlerPromise = (async () => {
 		const env = resolvePlatformEnv(platform);
 
-		// Cloudflare runtime: use D1 binding.
-		if (env) {
+		// Cloudflare runtime (built output): use D1 binding.
+		// In local Vite dev, adapter-cloudflare can provide a miniflare D1 binding without schema;
+		// prefer Bun sqlite there and validate D1 separately via `wrangler pages dev`.
+		if (!import.meta.env.DEV && env) {
 			const dbBindingName = typeof env.ORPC_DB_BINDING === 'string' ? env.ORPC_DB_BINDING : 'DB';
 			const dbBinding = env[dbBindingName];
-			if (dbBinding) {
+			if (isD1Database(dbBinding)) {
 				const [{ createD1Db }, { createAppRouter, createOrpcFetchHandler }] = await Promise.all([
 					import('@repo/db/d1'),
 					import('@repo/api')
@@ -133,7 +145,13 @@ const getLocalHandler = async (platform: RequestEvent['platform']) => {
 		const [{ createDb }, { migrateBunSqlite }, { createAppRouter, createOrpcFetchHandler }] =
 			await Promise.all([import('@repo/db/bun'), import('@repo/db/migrations'), import('@repo/api')]);
 
-		const db = createDb();
+		const nodeEnv = resolveNodeEnv();
+		const dbUrl =
+			typeof nodeEnv?.DATABASE_URL === 'string' && nodeEnv.DATABASE_URL.trim().length > 0
+				? nodeEnv.DATABASE_URL
+				: undefined;
+
+		const db = createDb(dbUrl);
 		migrateBunSqlite(db);
 		const router = createAppRouter(db);
 

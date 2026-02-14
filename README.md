@@ -98,6 +98,11 @@ Run e2e:
 bun run test:e2e
 ```
 
+Run e2e against the in-process Pages-style `/rpc` handler (web-only):
+```bash
+bun run test:e2e:solo
+```
+
 E2E notes:
 - `scripts/e2e-api.ts` starts `apps/api` at `127.0.0.1:3001` with a fresh temp sqlite DB file and relies on runtime migrations.
 

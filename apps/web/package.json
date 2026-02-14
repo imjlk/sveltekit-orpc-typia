@@ -11,7 +11,8 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test:e2e": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx playwright test"
+    "test:e2e": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx playwright test",
+    "test:e2e:solo": "E2E_API_URL=http://127.0.0.1:5173/rpc bunx playwright test -c playwright.solo.config.ts"
   },
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.0.0",
