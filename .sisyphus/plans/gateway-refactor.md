@@ -213,7 +213,7 @@ Critical Path: Task 1 → Task 2 → Task 3 → Task 4 → Task 5
     Evidence: .sisyphus/evidence/task-3-build.txt
   ```
 
-- [ ] 4. Integrate @repo/gateway into apps/web
+- [x] 4. Integrate @repo/gateway into apps/web
 
   **What to do**:
   - Add `@repo/gateway` to `apps/web/package.json`.

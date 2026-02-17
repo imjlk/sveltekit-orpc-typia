@@ -1,7 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { createGatewayHandler } from '$lib/server/orpc-gateway';
+import { createGatewayHandler } from '@repo/gateway';
 
-const handler: RequestHandler = createGatewayHandler('rpc');
+const handler: RequestHandler = createGatewayHandler('rpc', {
+	isDev: import.meta.env.DEV
+});
 
 export const GET: RequestHandler = handler;
 export const POST: RequestHandler = handler;
