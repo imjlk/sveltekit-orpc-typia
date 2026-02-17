@@ -97,6 +97,18 @@
         "typescript": "^5",
       },
     },
+    "packages/gateway": {
+      "name": "@repo/gateway",
+      "dependencies": {
+        "@orpc/server": "^1.13.5",
+        "@repo/api": "workspace:*",
+        "@repo/shared": "workspace:*",
+        "json-schema-typed": "^8.0.2",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/shared": {
       "name": "@repo/shared",
       "dependencies": {
@@ -298,6 +310,8 @@
     "@repo/api": ["@repo/api@workspace:packages/api"],
 
     "@repo/db": ["@repo/db@workspace:packages/db"],
+
+    "@repo/gateway": ["@repo/gateway@workspace:packages/gateway"],
 
     "@repo/shared": ["@repo/shared@workspace:packages/shared"],
 
