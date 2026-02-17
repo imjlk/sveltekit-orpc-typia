@@ -180,7 +180,7 @@ Critical Path: Task 1 → Task 2 → Task 3 → Task 4 → Task 5
     Evidence: .sisyphus/evidence/task-2-test.txt
   ```
 
-- [ ] 3. Implement handler factory
+- [x] 3. Implement handler factory
 
   **What to do**:
   - Create `packages/gateway/src/handler.ts`.

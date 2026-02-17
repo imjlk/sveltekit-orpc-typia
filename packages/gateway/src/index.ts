@@ -1,4 +1,5 @@
 export { resolveUpstream, type ResolveUpstreamOptions } from './resolver';
+export { createGatewayHandler, getLocalHandlers, type GatewayHandlerOptions, type LocalHandlers } from './handler';
 export {
   isD1Database,
   isServiceBinding,
