@@ -7,3 +7,7 @@
 - Successfully moved gateway logic to a dedicated workspace package.
 - Verified that SvelteKit builds correctly using the shared handler factory.
 - Verified that `import.meta.env.DEV` is correctly passed for dev-mode features like Scalar UI redirects.
+
+- 2026-02-17: Converting dynamic imports to string literals in `packages/gateway/src/handler.ts` removes variable indirection, but `dev:web:solo` still depends on SSR resolving `@repo/db/bun` from the `@repo/gateway` package context.
+
+- 2026-02-17: Adding explicit `resolve.alias` entries in `apps/web/vite.config.ts` for `@repo/db/bun`, `@repo/db/d1`, and `@repo/db/migrations` allows Vite SSR to resolve db runtime adapters when consumed through `@repo/gateway` in `dev:web:solo`.

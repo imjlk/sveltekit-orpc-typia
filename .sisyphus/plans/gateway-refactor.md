@@ -245,7 +245,7 @@ Critical Path: Task 1 → Task 2 → Task 3 → Task 4 → Task 5
     Evidence: .sisyphus/evidence/task-4-build.txt
   ```
 
-- [ ] 5. Verify E2E functionality
+- [x] 5. Verify E2E functionality
 
   **What to do**:
   - Run the full dev server.

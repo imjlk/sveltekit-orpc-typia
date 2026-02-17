@@ -1,0 +1,1 @@
+- 2026-02-17: In-process gateway path currently cannot resolve `@repo/db/bun` from `packages/gateway/src/handler.ts` under web dev SSR, causing `/rpc/*` requests in solo mode to return `502 Bad Gateway`.

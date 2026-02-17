@@ -32,9 +32,8 @@ export const getLocalHandlers = async (
       const dbBindingName = typeof env.ORPC_DB_BINDING === 'string' ? env.ORPC_DB_BINDING : 'DB';
       const dbBinding = env[dbBindingName];
       if (isD1Database(dbBinding)) {
-        const d1ModuleId = '@repo/db/d1';
         const [{ createD1Db }, { createAppRouter, createOrpcFetchHandler, createOpenApiFetchHandler }] =
-          await Promise.all([import(d1ModuleId), import('@repo/api')]);
+          await Promise.all([import('@repo/db/d1'), import('@repo/api')]);
 
         const db = createD1Db(dbBinding);
         const router = createAppRouter(db);
@@ -51,10 +50,8 @@ export const getLocalHandlers = async (
       throw new Error(`Missing D1 binding "${dbBindingName}" (set ORPC_DB_BINDING or bind as DB), or disable ORPC_IN_PROCESS.`);
     }
 
-    const bunDbModuleId = '@repo/db/bun';
-    const migrationsModuleId = '@repo/db/migrations';
     const [{ createDb }, { migrateBunSqlite }, { createAppRouter, createOrpcFetchHandler, createOpenApiFetchHandler }] =
-      await Promise.all([import(bunDbModuleId), import(migrationsModuleId), import('@repo/api')]);
+      await Promise.all([import('@repo/db/bun'), import('@repo/db/migrations'), import('@repo/api')]);
 
     const nodeEnv = resolveNodeEnv();
     const dbUrl =
