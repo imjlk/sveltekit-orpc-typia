@@ -147,7 +147,7 @@ Critical Path: Task 1 → Task 2 → Task 3 → Task 4 → Task 5
     Evidence: .sisyphus/evidence/task-1-scaffold.txt
   ```
 
-- [ ] 2. Implement upstream resolver logic
+- [x] 2. Implement upstream resolver logic
 
   **What to do**:
   - Extract `resolveUpstream` logic from `apps/web`.
