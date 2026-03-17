@@ -3,6 +3,19 @@ main = "src/index.ts"
 compatibility_date = "2026-02-12"
 compatibility_flags = ["nodejs_compat"]
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = true
+persist = true
+
 [[d1_databases]]
 binding = "DB"
 database_name = "CHANGE_ME"

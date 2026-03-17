@@ -6,6 +6,19 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 EDGE_GUARD_MODE = "ratelimit"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = true
+persist = true
+
 [[ratelimits]]
 name = "RATE_LIMITER"
 namespace_id = "CHANGE_ME"

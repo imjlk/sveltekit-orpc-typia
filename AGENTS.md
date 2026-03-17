@@ -64,6 +64,7 @@ Keep that positioning honest in code and docs.
 - Web on local Cloudflare Pages + D1: `bun run dev:web:cf`
 - Web on local Pages + split Worker services: `bun run dev:web:cf:services`
 - Build: `bun run build`
+- Generate checked-in Cloudflare binding types: `bun run types:cf`
 - Type and app checks: `bun run check`
 - Gateway unit test: `bun test packages/gateway/src/resolver.test.ts`
 - Auth bridge unit test: `bun test packages/shared/test/auth-bridge.test.ts`
@@ -136,6 +137,7 @@ When contracts change, regenerate the checked-in specs:
 - Local non-Cloudflare dev may fall back to Better Auth's built-in password hashing.
 - GitHub is the only social provider shipped in v1.
 - Keep auth under `/auth/*`, not `/api/auth/*`.
+- Keep secrets out of checked-in Wrangler config. Use `.dev.vars` locally and `wrangler pages secret put` or dashboard-managed secrets in Cloudflare.
 
 ## Docs Rules
 
@@ -155,6 +157,7 @@ When contracts change, regenerate the checked-in specs:
   - `packages/api/src/lib/errors.ts`
 - If you touch workspace imports used by `apps/web`, keep SvelteKit aliasing and Vite aliasing in sync.
   - SvelteKit aliases live in `apps/web/svelte.config.js`.
+- If you change Wrangler bindings for `apps/web`, `apps/worker-edge-guard`, or `apps/worker-post-events`, rerun `bun run types:cf`.
 - OpenAPI files under `apps/web/static/openapi/` are generated artifacts. Do not hand-edit them.
 
 ## Current Caveats

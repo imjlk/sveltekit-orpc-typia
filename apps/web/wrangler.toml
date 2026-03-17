@@ -9,10 +9,24 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 # Better Auth base URL for callback and cookie generation.
 # In production, set this to your deployed app origin.
 BETTER_AUTH_URL = "http://127.0.0.1:5173"
-BETTER_AUTH_SECRET = "dev-better-auth-secret-change-me"
 
 # When true, apps/web will handle /rpc in-process (no upstream proxy).
 ORPC_IN_PROCESS = "1"
+
+# Set BETTER_AUTH_SECRET as a Pages secret.
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = true
+persist = true
 
 [[d1_databases]]
 binding = "DB"

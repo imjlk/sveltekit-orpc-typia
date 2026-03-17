@@ -47,6 +47,17 @@ Cloudflare-first bindings:
 - advanced capability bindings: `EDGE_GUARD`, `POST_EVENTS`
 - legacy reference bindings: `ORPC_DEFAULT`, `ORPC_<ROUTER>`
 
+Secret handling:
+
+- keep `BETTER_AUTH_SECRET` in `.dev.vars` for local Pages development
+- set `BETTER_AUTH_SECRET` in Cloudflare with `wrangler pages secret put`
+- do not check secrets into `wrangler.toml`
+
+Binding type generation:
+
+- `bun run --cwd apps/web types:cf`
+- rerun it after changing `wrangler.toml` or `wrangler.services.toml`
+
 The app intentionally keeps extension bindings typed but unused by default:
 
 - `KV`
@@ -65,6 +76,7 @@ Artifact policy:
 - do not commit `test-results/`
 - do not commit `.wrangler/state`
 - do not commit temp SQLite files
+- keep `src/cloudflare-env.d.ts` in sync with `bun run --cwd apps/web types:cf`
 
 Advanced config note:
 

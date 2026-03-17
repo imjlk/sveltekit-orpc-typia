@@ -5,6 +5,19 @@ compatibility_flags = ["nodejs_compat"]
 
 # Set BETTER_AUTH_SECRET as a Worker secret before deployment.
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = true
+persist = true
+
 [[d1_databases]]
 binding = "DB"
 # Fill these in after `wrangler d1 create ...`

@@ -3,5 +3,18 @@ main = "src/index.ts"
 workers_dev = false
 compatibility_date = "2026-02-12"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = true
+persist = true
+
 [build]
 command = "bun run build:kernel"

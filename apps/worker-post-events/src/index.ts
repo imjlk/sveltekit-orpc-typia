@@ -3,9 +3,7 @@ import { postActivity } from '@repo/db';
 import type { PostEventMessage } from '@repo/shared';
 import { isIgnorablePostActivityError, isPostCreatedMessage, toPostActivityInsert } from './consumer';
 
-type Env = {
-	DB: D1Database;
-};
+type Env = Cloudflare.Env;
 
 const processBatch = async (batch: MessageBatch<PostEventMessage>, env: Env) => {
 	const db = createD1Db(env.DB);

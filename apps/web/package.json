@@ -9,6 +9,8 @@
     "build": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "prepare": "svelte-kit sync || echo ''",
+    "types:cf": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false",
+    "types:cf:check": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false --check",
     "check": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test:e2e": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx playwright test",

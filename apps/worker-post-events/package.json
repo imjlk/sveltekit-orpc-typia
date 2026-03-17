@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "types:cf": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false",
+    "types:cf:check": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false --check"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",

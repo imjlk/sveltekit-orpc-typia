@@ -76,20 +76,26 @@ bunx wrangler d1 create <your-d1-name>
 ```
 
 2. [apps/web/wrangler.toml](./apps/web/wrangler.toml) 의 `BETTER_AUTH_URL` 을 실제 Pages 도메인으로 바꿉니다.
-3. auth hasher Worker를 배포합니다.
+3. `BETTER_AUTH_SECRET` 은 체크인된 config var가 아니라 Pages secret으로 저장합니다.
+
+```bash
+bunx wrangler pages secret put BETTER_AUTH_SECRET --project-name <your-pages-project>
+```
+
+4. auth hasher Worker를 배포합니다.
 
 ```bash
 bun run --cwd apps/auth-hasher-worker deploy
 ```
 
-4. Cloudflare Pages 프로젝트에 아래 값을 설정합니다.
-   - 필수: `BETTER_AUTH_SECRET`
+5. Cloudflare Pages 프로젝트에 아래 값을 설정합니다.
    - 선택: `GITHUB_CLIENT_ID`
    - 선택: `GITHUB_CLIENT_SECRET`
-5. [apps/web/wrangler.toml](./apps/web/wrangler.toml) 의 `AUTH_HASHER` service binding 이 `cloudflare-first-starter-auth-hasher` 를 가리키는지 유지합니다.
-6. 평소 사용하는 Pages 배포 방식으로 앱을 배포합니다.
+6. [apps/web/wrangler.toml](./apps/web/wrangler.toml) 의 `AUTH_HASHER` service binding 이 `cloudflare-first-starter-auth-hasher` 를 가리키는지 유지합니다.
+7. 평소 사용하는 Pages 배포 방식으로 앱을 배포합니다.
 
 로컬 전용 secret 과 D1 HTTP migration 설정은 [apps/web/.dev.vars.example](./apps/web/.dev.vars.example) 를 기준으로 맞추면 됩니다.
+`apps/web`, `apps/worker-edge-guard`, `apps/worker-post-events` 의 Wrangler binding을 바꿨다면 `bun run types:cf` 로 체크인된 binding type도 같이 갱신합니다.
 
 ## 고급 예제
 
@@ -159,6 +165,7 @@ cargo check --manifest-path apps/auth-hasher-worker/Cargo.toml --target wasm32-u
 - `.wrangler/state` 는 커밋하지 않기
 - temp SQLite 파일은 커밋하지 않기
 - `bun run gen:openapi` 결과와 체크인된 OpenAPI 산출물을 일치시키기
+- `bun run types:cf` 결과와 체크인된 Cloudflare binding type을 일치시키기
 
 ## 패키지 문서
 

@@ -9,11 +9,7 @@ import {
 	toRateLimitBindingResult
 } from './policy';
 
-type Env = {
-	EDGE_GUARD_MODE?: string;
-	RATE_LIMITER?: RateLimit;
-	RATE_LIMITER_STATE?: DurableObjectNamespace<RateLimiterState>;
-};
+type Env = Cloudflare.Env;
 
 type CounterRow = {
 	count: number;
