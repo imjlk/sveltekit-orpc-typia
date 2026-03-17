@@ -14,3 +14,9 @@ export type NotFoundData = {
   resource?: string;
   id?: number;
 };
+
+export type RateLimitedData = {
+  retryAfterSeconds?: number;
+  limit: number;
+  remaining: number;
+};

@@ -1,8 +1,9 @@
-import { createMetaRouter, createOpenApiFetchHandler, createOrpcFetchHandler } from '@repo/api';
+import { createApiContext, createMetaRouter, createOpenApiFetchHandler, createOrpcFetchHandler } from '@repo/api';
 import { createD1Db } from '@repo/db/d1';
 
 type Env = {
   DB: D1Database;
+  BETTER_AUTH_SECRET?: string;
   ORPC_DEBUG_UPSTREAM?: string;
 };
 
@@ -25,8 +26,22 @@ const getHandlers = async (env: Env): Promise<Handlers> => {
     const router = createMetaRouter(db);
 
     return {
-      rpc: createOrpcFetchHandler(router, { prefix: '/rpc', context: {} }),
-      api: createOpenApiFetchHandler(router, { prefix: '/api', context: {} }),
+      rpc: createOrpcFetchHandler(router, {
+        prefix: '/rpc',
+        createContext: (request) =>
+          createApiContext(request, {
+            env,
+            allowDevFallback: ['127.0.0.1', 'localhost'].includes(new URL(request.url).hostname),
+          }),
+      }),
+      api: createOpenApiFetchHandler(router, {
+        prefix: '/api',
+        createContext: (request) =>
+          createApiContext(request, {
+            env,
+            allowDevFallback: ['127.0.0.1', 'localhost'].includes(new URL(request.url).hostname),
+          }),
+      }),
     };
   })();
 

@@ -1,0 +1,13 @@
+[package]
+name = "auth-hasher-hash-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared Rust password hashing logic for the auth hasher Worker."
+
+[dependencies]
+argon2.workspace = true
+hex.workspace = true
+scrypt.workspace = true
+subtle.workspace = true
+unicode-normalization.workspace = true

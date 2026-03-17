@@ -1,6 +1,3 @@
-// @ts-expect-error Workspace package intentionally avoids hard runtime dependency on SvelteKit.
-import type { RequestEvent } from '@sveltejs/kit';
-
 import { resolveUpstream } from './resolver';
 import type { GatewayKind, PlatformLike } from './types';
 import { isD1Database, resolveNodeEnv, resolvePlatformEnv } from './utils';
@@ -10,16 +7,28 @@ type LocalHandlers = {
   api: (request: Request) => Promise<Response>;
 };
 
-type RequestHandler = (event: RequestEvent) => Response | Promise<Response>;
+type GatewayRequestEvent = {
+  fetch: typeof fetch;
+  params: Record<string, string | undefined>;
+  platform?: PlatformLike;
+  request: Request;
+  url: URL;
+};
+
+type RequestHandler = (event: GatewayRequestEvent) => Response | Promise<Response>;
 
 type GatewayHandlerOptions = {
   isDev?: boolean;
+  getInternalHeaders?: (event: GatewayRequestEvent) => Promise<Record<string, string | undefined>>;
 };
 
 let localHandlersPromise: Promise<LocalHandlers> | null = null;
 
+const importRuntimeModule = <T>(specifier: string): Promise<T> =>
+  import(/* @vite-ignore */ specifier) as Promise<T>;
+
 export const getLocalHandlers = async (
-  platform: RequestEvent['platform'],
+  platform: GatewayRequestEvent['platform'],
   options: GatewayHandlerOptions = {},
 ): Promise<LocalHandlers> => {
   if (localHandlersPromise) return localHandlersPromise;
@@ -39,8 +48,18 @@ export const getLocalHandlers = async (
         const router = createAppRouter(db);
 
         return {
-          rpc: createOrpcFetchHandler(router, { prefix: '/rpc', context: {} }),
-          api: createOpenApiFetchHandler(router, { prefix: '/api', context: {} }),
+          rpc: createOrpcFetchHandler(router, {
+            prefix: '/rpc',
+            createContext: (request) => import('@repo/api').then(({ createApiContext }) =>
+              createApiContext(request, { env, allowDevFallback: isDev }),
+            ),
+          }),
+          api: createOpenApiFetchHandler(router, {
+            prefix: '/api',
+            createContext: (request) => import('@repo/api').then(({ createApiContext }) =>
+              createApiContext(request, { env, allowDevFallback: isDev }),
+            ),
+          }),
         };
       }
     }
@@ -50,20 +69,36 @@ export const getLocalHandlers = async (
       throw new Error(`Missing D1 binding "${dbBindingName}" (set ORPC_DB_BINDING or bind as DB), or disable ORPC_IN_PROCESS.`);
     }
 
-    const [{ createDb }, { migrateBunSqlite }, { createAppRouter, createOrpcFetchHandler, createOpenApiFetchHandler }] =
-      await Promise.all([import('@repo/db/bun'), import('@repo/db/migrations'), import('@repo/api')]);
+    const [{ createDb, defaultDbPath }, { migrateBunSqliteWithLock }, { createAppRouter, createOrpcFetchHandler, createOpenApiFetchHandler }] =
+      await Promise.all([
+        importRuntimeModule<typeof import('@repo/db/bun')>('@repo/db/bun'),
+        importRuntimeModule<typeof import('@repo/db/migrations')>('@repo/db/migrations'),
+        import('@repo/api'),
+      ]);
 
     const nodeEnv = resolveNodeEnv();
     const dbUrl =
-      typeof nodeEnv?.DATABASE_URL === 'string' && nodeEnv.DATABASE_URL.trim().length > 0 ? nodeEnv.DATABASE_URL : undefined;
+      typeof nodeEnv?.DATABASE_URL === 'string' && nodeEnv.DATABASE_URL.trim().length > 0 ? nodeEnv.DATABASE_URL : defaultDbPath;
 
     const db = createDb(dbUrl);
-    migrateBunSqlite(db);
+    await migrateBunSqliteWithLock(db, dbUrl);
     const router = createAppRouter(db);
 
     return {
-      rpc: createOrpcFetchHandler(router, { prefix: '/rpc', context: {} }),
-      api: createOpenApiFetchHandler(router, { prefix: '/api', context: {} }),
+      rpc: createOrpcFetchHandler(router, {
+        prefix: '/rpc',
+        createContext: (request) =>
+          import('@repo/api').then(({ createApiContext }) =>
+            createApiContext(request, { env: nodeEnv, allowDevFallback: true }),
+          ),
+      }),
+      api: createOpenApiFetchHandler(router, {
+        prefix: '/api',
+        createContext: (request) =>
+          import('@repo/api').then(({ createApiContext }) =>
+            createApiContext(request, { env: nodeEnv, allowDevFallback: true }),
+          ),
+      }),
     };
   })();
 
@@ -76,11 +111,22 @@ export const createGatewayHandler = (kind: GatewayKind, options: GatewayHandlerO
     const path = params.path ? `/${params.path}` : '';
     const routerName = params.path?.split('/')[0];
     const upstream = resolveUpstream(kind, { platform: platform as PlatformLike, routerName });
+    const headers = new Headers(request.headers);
+    headers.delete('host');
+
+    const internalHeaders = options.getInternalHeaders ? await options.getInternalHeaders(event) : {};
+    for (const [key, value] of Object.entries(internalHeaders)) {
+      if (typeof value === 'string' && value.length > 0) {
+        headers.set(key, value);
+      }
+    }
+
+    const requestWithHeaders = new Request(request, { headers });
 
     if (upstream.kind === 'local') {
       try {
         const handlers = await getLocalHandlers(platform, options);
-        return kind === 'rpc' ? handlers.rpc(request) : handlers.api(request);
+        return kind === 'rpc' ? handlers.rpc(requestWithHeaders) : handlers.api(requestWithHeaders);
       } catch (error) {
         console.error(`Failed to handle ${kind.toUpperCase()} request in-process:`, error);
         return new Response('Bad Gateway', { status: 502 });
@@ -91,16 +137,13 @@ export const createGatewayHandler = (kind: GatewayKind, options: GatewayHandlerO
     const targetUrl = new URL(`${baseUrl}${path}`);
     targetUrl.search = url.search;
 
-    const headers = new Headers(request.headers);
-    headers.delete('host');
-
     const init: RequestInit = {
-      method: request.method,
+      method: requestWithHeaders.method,
       headers,
     };
 
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      const requestBody = await request.arrayBuffer();
+    if (requestWithHeaders.method !== 'GET' && requestWithHeaders.method !== 'HEAD') {
+      const requestBody = await requestWithHeaders.arrayBuffer();
       init.body = requestBody.byteLength > 0 ? requestBody : undefined;
     }
 

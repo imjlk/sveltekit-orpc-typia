@@ -2,7 +2,7 @@ import type { RequestHandler } from './$types';
 import { renderScalarDocsHtml } from '@repo/shared';
 
 export const GET: RequestHandler = async () => {
-	const html = renderScalarDocsHtml({ specUrl: '/api/spec.json', title: 'sveltekit-orpc-typia API' });
+	const html = renderScalarDocsHtml({ specUrl: '/api/spec.json', title: 'Cloudflare First Starter API' });
 
 	return new Response(html, {
 		status: 200,

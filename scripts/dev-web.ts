@@ -69,8 +69,7 @@ const resolveDevDbPath = () => {
   const provided = process.env.DATABASE_URL;
   if (provided) return provided;
 
-  // New filename to avoid conflicts with pre-migrations baseline copies.
-  return resolve(tmpdir(), 'sveltekit-orpc-typia.dev.migrations.sqlite');
+  return resolve(tmpdir(), 'cloudflare-first-starter.dev.migrations.sqlite');
 };
 
 const ensureDevDb = (dbPath: string) => {

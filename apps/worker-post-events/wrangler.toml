@@ -1,0 +1,14 @@
+name = "cloudflare-first-starter-worker-post-events"
+main = "src/index.ts"
+compatibility_date = "2026-02-12"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "CHANGE_ME"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[queues]
+consumers = [
+  { queue = "cloudflare-first-starter-post-events", max_batch_size = 10, max_batch_timeout = 5, max_retries = 3 }
+]

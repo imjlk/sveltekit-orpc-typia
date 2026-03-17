@@ -1,4 +1,4 @@
-import { badRequestDataSchema, notFoundDataSchema } from './schema';
+import { badRequestDataSchema, notFoundDataSchema, rateLimitedDataSchema } from './schema';
 
 export const commonErrors = {
   BAD_REQUEST: {
@@ -20,3 +20,17 @@ export const notFoundErrors = {
   },
 } as const;
 
+export const unauthorizedErrors = {
+  UNAUTHORIZED: {
+    status: 401,
+    message: 'Unauthorized',
+  },
+} as const;
+
+export const rateLimitedErrors = {
+  TOO_MANY_REQUESTS: {
+    status: 429,
+    message: 'Too Many Requests',
+    data: rateLimitedDataSchema,
+  },
+} as const;

@@ -3,13 +3,13 @@ import { ORPCError, implement } from '@orpc/server';
 import { categoryContract } from '@repo/shared';
 import { badRequest, internalError } from '../../lib/errors';
 import { trimRequired } from '../../lib/input';
-import type { DbClient } from '../../types';
+import type { AppContext, DbClient } from '../../types';
 
 type CategoryRow = typeof categories.$inferSelect;
 type CategoryInsert = typeof categories.$inferInsert;
 type CategoryTreeNodeRow = CategoryRow & { children: CategoryTreeNodeRow[] };
 
-const category = implement(categoryContract);
+const category = implement(categoryContract).$context<AppContext>();
 
 export const createCategoryRouter = (db: DbClient) =>
   category.router({

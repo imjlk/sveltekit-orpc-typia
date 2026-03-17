@@ -1,42 +1,74 @@
-# sv
+# apps/web
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Public app shell for the Cloudflare First Starter.
 
-## Creating a project
+This package owns the browser-facing runtime:
 
-If you're seeing this, you've probably already done this step. Congrats!
+- the landing page and protected demo flows
+- Better Auth mounted at `/auth/*`
+- gateway entry points for `/rpc/*` and `/api/*`
+- checked-in OpenAPI assets under `static/openapi/`
+- Cloudflare Pages runtime bindings and local dev parity
+- shared `AUTH_HASHER` helpers from `@repo/auth-hasher-contracts`, `@repo/auth-hasher-client`,
+  and `@repo/auth-hasher-better-auth-adapter`
 
-```sh
-# create a new project
-npx sv create my-app
-```
+Key routes:
 
-To recreate this project with the same configuration:
+- `/`
+  public template landing page
+- `/auth/*`
+  sign-up, sign-in, and Better Auth handler surface
+- `/posts`
+  minimal protected CRUD example scoped to the signed-in user
+- `/api/docs`
+  Scalar UI for the checked-in REST spec
+- `/api/docs/rpc`
+  Scalar UI for the Standard RPC wrapper spec
 
-```sh
-# recreate this project
-bun x sv create --template minimal --types ts --install bun apps/web
-```
+Runtime modes:
 
-## Developing
+- `bun run dev`
+  Vite dev server, usually paired with `apps/api`
+- `bun run dev:web:solo`
+  in-process RPC using local SQLite
+- `bun run dev:web:cf`
+  local Pages plus D1
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Advanced reference mode:
 
-```sh
-npm run dev
+- `bun run dev:web:cf:services`
+  capability example setup with `EDGE_GUARD` and `POST_EVENTS`
+  on `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session, and `post_activity` is projected inline to keep the example visible
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+Cloudflare-first bindings:
 
-## Building
+- required: `DB`, `AUTH_HASHER`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+- optional: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
+- advanced capability bindings: `EDGE_GUARD`, `POST_EVENTS`
+- legacy reference bindings: `ORPC_DEFAULT`, `ORPC_<ROUTER>`
 
-To create a production version of your app:
+The app intentionally keeps extension bindings typed but unused by default:
 
-```sh
-npm run build
-```
+- `KV`
+- `APP_STATE`
+- `HYPERDRIVE`
+- `R2`
 
-You can preview the production build with `npm run preview`.
+Useful checks:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- `bun run --cwd apps/web check`
+- `bun run --cwd apps/web test:e2e`
+- `bun run --cwd apps/web test:e2e:solo`
+
+Artifact policy:
+
+- do not commit `test-results/`
+- do not commit `.wrangler/state`
+- do not commit temp SQLite files
+
+Advanced config note:
+
+- `wrangler.toml`
+  default Pages + D1 path
+- `wrangler.services.toml`
+  capability example path used by `dev:web:cf:services`

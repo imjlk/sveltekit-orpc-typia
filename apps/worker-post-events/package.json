@@ -1,0 +1,19 @@
+{
+  "name": "worker-post-events",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "drizzle-orm": "^0.45.1"
+  }
+}

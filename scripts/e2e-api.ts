@@ -7,7 +7,7 @@ const root = resolve(import.meta.dir, '..');
 const port = process.env.PORT ?? '3001';
 const dbPath =
   process.env.DATABASE_URL ??
-  resolve(tmpdir(), `sveltekit-orpc-typia.e2e.${process.pid}.${Date.now()}.sqlite`);
+  resolve(tmpdir(), `cloudflare-first-starter.e2e.${process.pid}.${Date.now()}.sqlite`);
 
 mkdirSync(dirname(dbPath), { recursive: true });
 

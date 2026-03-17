@@ -1,9 +1,9 @@
 import { serve } from 'bun';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { createAppRouter, createOpenApiFetchHandler, createOrpcFetchHandler } from '@repo/api';
-import { createDb } from '@repo/db/bun';
-import { migrateBunSqlite } from '@repo/db/migrations';
+import { createApiContext, createAppRouter, createOpenApiFetchHandler, createOrpcFetchHandler } from '@repo/api';
+import { createDb, defaultDbPath } from '@repo/db/bun';
+import { migrateBunSqliteWithLock } from '@repo/db/migrations';
 import { renderScalarDocsHtml } from '@repo/shared';
 
 const port = Number(process.env.PORT ?? 3000);
@@ -43,21 +43,22 @@ const corsHeaders =
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       };
 
-const db = createDb();
-migrateBunSqlite(db);
+const localDbPath = process.env.DATABASE_URL ?? defaultDbPath;
+const db = createDb(localDbPath);
+await migrateBunSqliteWithLock(db, localDbPath);
 const appRouter = createAppRouter(db);
 const rpcHandler = createOrpcFetchHandler(appRouter, {
   prefix: '/rpc',
   corsHeaders,
   healthPath: '/health',
-  context: {},
+  createContext: (request) => createApiContext(request, { env: process.env, allowDevFallback: true }),
 });
 
 const openApiHandler = createOpenApiFetchHandler(appRouter, {
   prefix: '/api',
   corsHeaders,
   healthPath: '/health',
-  context: {},
+  createContext: (request) => createApiContext(request, { env: process.env, allowDevFallback: true }),
 });
 
 serve({
@@ -68,7 +69,7 @@ serve({
 
     // Scalar UI + spec endpoints (served by Bun server too, for local dev parity).
     if (pathname === '/api/docs' || pathname === '/api/docs/') {
-      return new Response(renderScalarDocsHtml({ specUrl: '/api/spec.json', title: 'sveltekit-orpc-typia API' }), {
+      return new Response(renderScalarDocsHtml({ specUrl: '/api/spec.json', title: 'Cloudflare First Starter API' }), {
         status: 200,
         headers: {
           'content-type': 'text/html; charset=utf-8',
@@ -81,7 +82,7 @@ serve({
       return new Response(
         renderScalarDocsHtml({
           specUrl: '/api/spec.rpc.json',
-          title: 'sveltekit-orpc-typia RPC (Standard RPC)',
+          title: 'Cloudflare First Starter RPC',
         }),
         {
           status: 200,
@@ -128,4 +129,4 @@ serve({
   },
 });
 
-console.log(`API server running on http://localhost:${port}`);
+console.log(`Cloudflare First Starter API server running on http://localhost:${port}`);

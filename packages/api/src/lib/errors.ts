@@ -1,5 +1,5 @@
 import { ORPCError } from '@orpc/server';
-import type { BadRequestData, ErrorIssue, NotFoundData } from '@repo/shared';
+import type { BadRequestData, ErrorIssue, NotFoundData, RateLimitedData } from '@repo/shared';
 
 const isTruthy = (value: unknown): boolean =>
   value === '1' || value === 'true' || value === 'TRUE' || value === 'yes' || value === 'YES';
@@ -44,6 +44,14 @@ export const notFound = (
   message = 'Not Found',
 ): ORPCError<'NOT_FOUND', NotFoundData> =>
   new ORPCError('NOT_FOUND', { message, data: { resource, id } });
+
+export const unauthorized = (message = 'Unauthorized'): ORPCError<'UNAUTHORIZED', undefined> =>
+  new ORPCError('UNAUTHORIZED', { message });
+
+export const rateLimited = (
+  message = 'Too Many Requests',
+  data: RateLimitedData,
+): ORPCError<'TOO_MANY_REQUESTS', RateLimitedData> => new ORPCError('TOO_MANY_REQUESTS', { message, data });
 
 export const internalError = (
   message = 'Internal Server Error',

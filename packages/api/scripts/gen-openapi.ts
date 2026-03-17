@@ -14,16 +14,17 @@ const outDir = resolve(repoRoot, 'apps/web/static/openapi');
 
 const OPENAPI_VERSION = '3.1.1' as const;
 
-const API_INFO_DESCRIPTION = `Contract-first API docs generated from oRPC contracts.
+const API_INFO_DESCRIPTION = `Contract-first API docs generated from shared oRPC contracts.
 
 - REST(OpenAPI-style): \`/api/<router>/<procedure>\`
 - Standard RPC: \`/rpc/<router>/<procedure>\` (documented separately)
+- Auth: \`/auth/*\` (handled by Better Auth, intentionally separate from \`/api/*\`)
 - Specs:
   - \`/openapi/openapi.api.json\` (REST)
   - \`/openapi/openapi.rpc.json\` (Standard RPC wrapper)
 `;
 
-const RPC_INFO_DESCRIPTION = `Standard RPC protocol docs for this repo.
+const RPC_INFO_DESCRIPTION = `Standard RPC protocol docs for the Cloudflare First Starter.
 
 This spec describes the \`/rpc\` endpoints but the payload is wrapped:
 
@@ -112,7 +113,7 @@ const generateApiSpec = async () => {
 
   const doc = await generator.generate(appContract as never, {
     info: {
-      title: 'sveltekit-orpc-typia',
+      title: 'Cloudflare First Starter API',
       version: process.env.APP_VERSION ?? '0.0.0',
       description: API_INFO_DESCRIPTION,
     },
@@ -135,7 +136,7 @@ const generateRpcSpec = async () => {
   const doc: OpenAPI.Document = {
     openapi: OPENAPI_VERSION,
     info: {
-      title: 'sveltekit-orpc-typia (Standard RPC)',
+      title: 'Cloudflare First Starter RPC',
       version: process.env.APP_VERSION ?? '0.0.0',
       description: RPC_INFO_DESCRIPTION,
     },

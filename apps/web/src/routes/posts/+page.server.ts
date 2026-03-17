@@ -1,16 +1,23 @@
-import { createPost, listPosts } from '$lib/server/modules/post/service';
+import { createPost, listPostActivity, listPosts } from '$lib/server/modules/post/service';
+import { buildAuthNextQuery } from '$lib/auth/next';
+import type { RateLimitedData } from '@repo/shared';
 import { createPostSchema } from '@repo/shared/modules/post/schema';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import type { CreatePostInput } from '@repo/shared';
 
 export const load: PageServerLoad = async (event) => {
+	const { session } = await event.parent();
+	if (!session?.user?.id) {
+		throw redirect(303, `/auth/sign-in${buildAuthNextQuery('/posts')}`);
+	}
+
 	try {
-		const posts = await listPosts(event);
-		return { posts };
+		const [posts, activity] = await Promise.all([listPosts(event), listPostActivity(event)]);
+		return { posts, activity, session };
 	} catch (error) {
 		console.error('Failed to load posts:', error);
-		return { posts: [] };
+		return { posts: [], activity: [], session };
 	}
 };
 
@@ -48,8 +55,45 @@ const mapFieldErrors = (
 	return errors;
 };
 
+const isRateLimitedError = (
+	error: unknown
+): error is { code: 'TOO_MANY_REQUESTS'; data?: RateLimitedData; message?: string } =>
+	!!error &&
+		typeof error === 'object' &&
+		'code' in error &&
+		(error as { code?: unknown }).code === 'TOO_MANY_REQUESTS';
+
+const buildRateLimitMessage = (error: { data?: RateLimitedData; message?: string }): string => {
+	const retryAfterSeconds = error.data?.retryAfterSeconds;
+	if (typeof retryAfterSeconds === 'number' && retryAfterSeconds > 0) {
+		return `${error.message ?? 'Too many requests.'} Try again in ${retryAfterSeconds}s.`;
+	}
+
+	return error.message ?? 'Too many requests. Try again shortly.';
+};
+
 export const actions: Actions = {
 	default: async (event) => {
+		const sessionResult = event.locals.auth
+			? await event.locals.auth.api.getSession({
+					headers: event.request.headers
+				})
+			: null;
+		const userId =
+			sessionResult &&
+			typeof sessionResult === 'object' &&
+			'user' in sessionResult &&
+			sessionResult.user &&
+			typeof sessionResult.user === 'object' &&
+			'id' in sessionResult.user &&
+			typeof sessionResult.user.id === 'string'
+				? sessionResult.user.id
+				: null;
+
+		if (!userId) {
+			throw redirect(303, `/auth/sign-in${buildAuthNextQuery('/posts')}`);
+		}
+
 		const { request } = event;
 		const formData = await request.formData();
 		const title = String(formData.get('title') ?? '');
@@ -79,6 +123,14 @@ export const actions: Actions = {
 			};
 		} catch (error) {
 			console.error('Failed to create post:', error);
+			if (isRateLimitedError(error)) {
+				return fail(429, {
+					values: { title, content },
+					fieldErrors: {} as Partial<Record<keyof CreatePostInput, string>>,
+					formError: buildRateLimitMessage(error)
+				});
+			}
+
 			return fail(500, {
 				values: { title, content },
 				fieldErrors: {} as Partial<Record<keyof CreatePostInput, string>>,

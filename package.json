@@ -1,5 +1,5 @@
 {
-  "name": "sveltekit-orpc-typia",
+  "name": "cloudflare-first-starter",
   "private": true,
   "scripts": {
     "dev:api": "bun run --cwd apps/api dev",
@@ -10,7 +10,7 @@
     "dev:web:cf:services": "bun scripts/dev-web-cf-services.ts",
     "dev": "bun scripts/dev.ts",
     "build": "bun run --cwd packages/shared build && bun run --cwd apps/web build",
-    "check": "bun run --cwd packages/shared build && bunx tsc -p apps/api/tsconfig.json --noEmit && bunx tsc -p apps/worker-content/tsconfig.json --noEmit && bunx tsc -p apps/worker-meta/tsconfig.json --noEmit && bun run --cwd apps/web check",
+    "check": "bun run --cwd packages/shared build && bunx tsc -p packages/auth-hasher-contracts/tsconfig.json --noEmit && bunx tsc -p packages/auth-hasher-client/tsconfig.json --noEmit && bunx tsc -p packages/auth-hasher-better-auth-adapter/tsconfig.json --noEmit && bunx tsc -p packages/auth-hasher/tsconfig.json --noEmit && bunx tsc -p apps/api/tsconfig.json --noEmit && bunx tsc -p apps/auth-hasher-worker/tsconfig.json --noEmit && bunx tsc -p apps/worker-content/tsconfig.json --noEmit && bunx tsc -p apps/worker-meta/tsconfig.json --noEmit && bunx tsc -p apps/worker-edge-guard/tsconfig.json --noEmit && bunx tsc -p apps/worker-post-events/tsconfig.json --noEmit && bun run --cwd apps/web check",
     "check:ci": "bun run check && bun run verify:openapi",
     "gen:openapi": "bun run --cwd packages/shared build && bun packages/api/scripts/gen-openapi.ts",
     "verify:openapi": "bun run gen:openapi && git diff --exit-code apps/web/static/openapi",

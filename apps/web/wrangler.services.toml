@@ -1,0 +1,24 @@
+name = "cloudflare-first-starter-web"
+compatibility_date = "2026-02-12"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+[vars]
+BETTER_AUTH_URL = "http://127.0.0.1:5173"
+BETTER_AUTH_SECRET = "dev-better-auth-secret-change-me"
+ORPC_IN_PROCESS = "1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "CHANGE_ME"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[[services]]
+binding = "AUTH_HASHER"
+service = "cloudflare-first-starter-auth-hasher"
+
+[queues]
+producers = [
+  { binding = "POST_EVENTS", queue = "cloudflare-first-starter-post-events" }
+]

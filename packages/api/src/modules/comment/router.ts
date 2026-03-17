@@ -3,11 +3,11 @@ import { ORPCError, implement } from '@orpc/server';
 import { commentContract } from '@repo/shared';
 import { badRequest, internalError } from '../../lib/errors';
 import { normalizeCreateCommentInput } from './normalize';
-import type { DbClient } from '../../types';
+import type { AppContext, DbClient } from '../../types';
 
 type CommentInsert = typeof comments.$inferInsert;
 
-const comment = implement(commentContract);
+const comment = implement(commentContract).$context<AppContext>();
 
 export const createCommentRouter = (db: DbClient) =>
   comment.router({

@@ -1,11 +1,12 @@
-name = "sveltekit-orpc-typia-worker-meta"
+name = "cloudflare-first-starter-worker-meta"
 main = "src/index.ts"
 compatibility_date = "2026-02-14"
 compatibility_flags = ["nodejs_compat"]
+
+# Set BETTER_AUTH_SECRET as a Worker secret before deployment.
 
 [[d1_databases]]
 binding = "DB"
 # Fill these in after `wrangler d1 create ...`
 database_name = "CHANGE_ME"
 database_id = "00000000-0000-0000-0000-000000000000"
-

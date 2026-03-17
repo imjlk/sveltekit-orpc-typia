@@ -1,15 +1,36 @@
-# shared
+# packages/shared
 
-To install dependencies:
+Shared contract layer for the starter.
 
-```bash
-bun install
-```
+This package is the SSOT for:
 
-To run:
+- oRPC contracts
+- typia-backed schemas
+- transport-safe DTO mapping
+- shared error shapes
+- capability types shared between Pages and advanced Workers
+- the signed internal auth bridge used between the gateway and API runtimes
 
-```bash
-bun run index.ts
-```
+When adding or changing a domain, update this package before touching runtime apps.
 
-This project was created using `bun init` in bun v1.3.8. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Typical workflow:
+
+1. define or update the module schema and contract here
+2. implement the router in `packages/api`
+3. expose the router through `packages/gateway`
+4. wire the feature into `apps/web` or another runtime wrapper
+
+Service-bound Workers are an advanced follow-on, not the default template path.
+
+Useful commands:
+
+- `bun run --cwd packages/shared build`
+- `bun test packages/shared/test/auth-bridge.test.ts`
+
+Important exports include:
+
+- `contracts/*`
+- `modules/*`
+- `capabilities`
+- `transport/auth-bridge`
+- transport helpers for OpenAPI, Scalar, Standard RPC, and typia-backed serialization

@@ -1,161 +1,174 @@
-# sveltekit-orpc-typia
+# Cloudflare First Starter
 
-SvelteKit + oRPC + typia + Drizzle monorepo.
+Cloudflare-first GitHub template for teams that want a contract-first stack without pretending deployment choices do not matter.
 
-The main idea is:
-- `@repo/shared` is the SSOT for contracts + runtime schemas.
-- `@repo/api` exposes the server router + a `fetch(Request) => Response` handler.
-- `apps/api` is just a Bun wrapper around that handler.
-- `apps/web` (Cloudflare Pages) can proxy to an upstream (URL/service binding) or run the RPC handler **in-process**.
+Korean translation: [`README_ko.md`](./README_ko.md)
 
-## Repo Layout
+## What This Template Gives You
 
-- `apps/web`: SvelteKit (adapter-cloudflare)
-- `apps/api`: Bun dev server (optional)
-- `apps/worker-content`: Cloudflare Worker (post + comment) for service-binding split deployments
-- `apps/worker-meta`: Cloudflare Worker (category + tag) for service-binding split deployments
-- `packages/shared`: contracts/schemas/types/transport helpers
-- `packages/api`: server implementation (router factory + fetch handler)
-- `packages/db`: Drizzle schema + runtime-specific DB adapters
-  - `@repo/db/bun`: Bun SQLite adapter (`bun:sqlite`)
-  - `@repo/db/d1`: Cloudflare D1 adapter
+- `SvelteKit` running on Cloudflare Pages
+- `oRPC` + `typia` as the shared contract and schema layer
+- `Drizzle` + `D1` as the default relational data path
+- `better-auth` mounted under `/auth/*`
+- an in-process gateway for `/rpc/*` and `/api/*` by default
+- a minimal auth-scoped CRUD example under `/posts`
+- an internal `AUTH_HASHER` Worker with a TypeScript shell and Rust Wasm kernel
+- automatic password rehash on successful email/password sign-in when the stored hash is older than the active `AUTH_HASHER` preset
+- optional advanced examples for `EDGE_GUARD` rate limiting and `POST_EVENTS` async projection
 
-## Dev
+This template is intentionally opinionated. It is not trying to be infra-agnostic.
 
-Install:
-```bash
-bun install
+## Architecture
+
+```mermaid
+flowchart LR
+    U["Browser"] --> W["Cloudflare Pages / apps/web"]
+    W --> AUTH["/auth/* (Better Auth)"]
+    W --> RPC["/rpc/* Gateway"]
+    W --> API["/api/* Gateway"]
+    AUTH --> DB["D1 / Drizzle"]
+    RPC --> APP["In-process App Router"]
+    API --> APP
+    APP --> DB
+    W -. optional .-> HASH["AUTH_HASHER Worker"]
+    HASH -. service binding .-> W
 ```
 
-Run everything (shared watch + api + web, with prefixed logs):
+Default public surface:
+
+- `/auth/*`
+- `/rpc/*`
+- `/api/*`
+- `/api/docs`
+- `/api/docs/rpc`
+
+The recommended extension path stays explicit:
+
+1. `packages/shared`
+2. `packages/api`
+3. `packages/gateway`
+4. `apps/*`
+
+## Quick Start
+
+Install and validate the template:
+
 ```bash
-bun run dev
+bun install --frozen-lockfile
+bun run check
 ```
 
-Run web only (shared watch + web) with RPC handled in-process:
+Choose one local runtime:
+
+- `bun run dev:web:solo`
+  fastest loop, local SQLite, in-process `/rpc`
+- `bun run dev`
+  Vite web app plus Bun API server
+- `bun run dev:web:cf`
+  local Pages + D1 parity
+
+## Deploy To Cloudflare
+
+1. Create a D1 database and copy the returned `database_name` and `database_id` into [apps/web/wrangler.toml](./apps/web/wrangler.toml).
+
 ```bash
-bun run dev:web:solo
+bunx wrangler d1 create <your-d1-name>
 ```
 
-Notes:
-- `dev:web:solo` sets `ORPC_IN_PROCESS=1` and uses a local sqlite file at `/tmp/sveltekit-orpc-typia.dev.migrations.sqlite` by default.
-- DB schema is applied automatically at startup from the checked-in migrations in `packages/db/drizzle` (no baseline DB copy).
-- `apps/web` runs Vite via Bun (`bunx --bun vite ...`) so local in-process mode can import `@repo/db/bun` (`bun:sqlite`). Cloudflare uses D1 instead.
+2. Set `BETTER_AUTH_URL` in [apps/web/wrangler.toml](./apps/web/wrangler.toml) to your deployed Pages origin.
+3. Deploy the auth hasher Worker.
 
-Run Cloudflare Pages locally (wrangler + D1 binding):
 ```bash
-bun run dev:web:cf
+bun run --cwd apps/auth-hasher-worker deploy
 ```
 
-Cloudflare notes:
-- Update `apps/web/wrangler.toml` with your D1 `database_name` / `database_id`.
-- Put secrets in `apps/web/.dev.vars` (see `apps/web/.dev.vars.example`). Wrangler will load `.dev.vars` automatically.
-- `dev:web:cf` applies checked-in Drizzle SQL migrations into the local D1 persistence directory before starting Pages.
-- If your local D1 state gets out of sync, reset it:
-```bash
-bun run dev:web:cf:reset
-```
-- Quick smoke (local Pages runtime + local D1 + migrations):
-```bash
-bun run smoke:web:cf
-```
+4. In your Cloudflare Pages project, configure:
+   - required: `BETTER_AUTH_SECRET`
+   - optional: `GITHUB_CLIENT_ID`
+   - optional: `GITHUB_CLIENT_SECRET`
+5. Keep the `AUTH_HASHER` service binding in [apps/web/wrangler.toml](./apps/web/wrangler.toml) pointed at `cloudflare-first-starter-auth-hasher`.
+6. Deploy the Pages app with your normal Pages workflow.
 
-Run Pages locally with Workers service bindings (split routers across two Workers):
-```bash
-bun run dev:web:cf:services
-```
+For local-only secrets and D1 HTTP migration config, copy from [apps/web/.dev.vars.example](./apps/web/.dev.vars.example).
 
-## Gateway Routing (apps/web)
+## Advanced Examples
 
-Gateways:
-- `/rpc/*` (Standard RPC)
-- `/api/*` (OpenAPI-style REST)
+The default template does not need extra application Workers.
 
-Implementation:
-- `apps/web/src/lib/server/orpc-gateway.ts` (shared gateway logic)
-- `apps/web/src/routes/rpc/[...path]/+server.ts`
-- `apps/web/src/routes/api/[...path]/+server.ts`
-
-Path shape:
-- `/rpc/<router>/<procedure>`
-- `/api/<router>/<procedure>`
-
-Upstream resolution order:
-1. Per-router Cloudflare service binding:
-   - `ORPC_POST` (binding object), or
-   - `ORPC_POST_BINDING="BINDING_NAME"` + `BINDING_NAME` (binding object)
-2. Per-router URL:
-   - `ORPC_POST_URL="https://.../rpc"` (or base url, `/rpc` is appended)
-3. Default binding:
-   - `ORPC_DEFAULT` / `ORPC_API` (binding), or `*_BINDING` indirection
-4. Default URL:
-   - `ORPC_API_URL` / `ORPC_DEFAULT_URL` / (Node) `ORPC_API_URL` / `VITE_API_URL`
-5. In-process mode:
-   - `ORPC_IN_PROCESS=1`
-6. Fallback:
-   - `http://127.0.0.1:3000/<rpc|api>`
-
-In-process DB selection:
-- Cloudflare runtime: uses D1 binding `DB` (override name with `ORPC_DB_BINDING`)
-- Local dev (Bun): uses sqlite via `@repo/db/bun` (respects `DATABASE_URL` if set)
-
-## DB Migrations
-
-Migrations are the SSOT and are checked in at `packages/db/drizzle/`.
-
-Generate migrations (after editing `packages/db/src/schema.ts`):
-```bash
-bun run --cwd packages/db db:generate
+```mermaid
+flowchart LR
+    W["Pages Gateway"] --> APP["Default App Router"]
+    APP --> DB["D1"]
+    APP -. optional service binding .-> EG["EDGE_GUARD Worker"]
+    EG --> RL["Workers Rate Limiting binding"]
+    EG -. optional adapter .-> DO["RATE_LIMITER_STATE DO"]
+    APP -. optional queue send .-> Q["POST_EVENTS Queue"]
+    Q --> C["post-events Consumer Worker"]
+    C --> DB
 ```
 
-Apply migrations:
-- Local sqlite (`packages/db/sqlite.db`): `bun run --cwd packages/db db:migrate`
-- Cloudflare D1 (via API token): `bun run --cwd packages/db db:migrate:d1` (requires `CF_ACCOUNT_ID`, `CF_D1_DATABASE_ID`, `CF_API_TOKEN`)
+Use extra Workers only when Cloudflare capabilities are the reason:
 
-Runtime auto-migration:
-- `apps/api` and `apps/web` (Bun sqlite fallback) run `drizzle-orm` migrator on boot using `@repo/db/migrations`.
+- rate limiting
+- coordinated edge state
+- async side effects
+- Durable Object backed workflows
 
-## Tests
+Current notes:
 
-Run e2e:
+- `bun run dev:web:cf:services` is an advanced reference mode only.
+- It boots the capability example path: `EDGE_GUARD` + `POST_EVENTS`.
+- On `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session.
+- On `localhost`, `post_activity` is also projected inline so the advanced example stays visible even when local Queue emulation lags.
+- `apps/worker-content` and `apps/worker-meta` are transitionary reference implementations for service-binding experiments.
+- They are not the recommended default topology for this template.
+- They remain in the repo only as legacy references.
+
+Advanced example bindings:
+
+- `EDGE_GUARD`
+  service binding for cross-cutting post creation policy
+- `POST_EVENTS`
+  Queue producer used to project `post.created` into `post_activity`
+- `RATE_LIMITER_STATE`
+  Durable Object namespace used only when `EDGE_GUARD_MODE=do`
+
+Advanced example files:
+
+- [`apps/web/wrangler.services.toml`](./apps/web/wrangler.services.toml)
+- [`apps/worker-edge-guard`](./apps/worker-edge-guard)
+- [`apps/worker-post-events`](./apps/worker-post-events)
+
+## Validation Bar
+
+Fresh clone release bar:
+
 ```bash
+bun install --frozen-lockfile
+bun run check
 bun run test:e2e
+bun run --cwd apps/web test:e2e:solo
+bun test packages/auth-hasher-contracts/test/index.test.ts packages/auth-hasher-client/test/index.test.ts packages/api/src/lib/capabilities.test.ts packages/gateway/src/resolver.test.ts packages/shared/test/auth-bridge.test.ts apps/web/src/lib/server/auth-social.test.ts apps/web/src/lib/server/auth-password-hasher.test.ts apps/web/src/lib/server/auth-password-rehash.test.ts apps/auth-hasher-worker/src/fetch-handler.test.ts apps/auth-hasher-worker/src/kernel-node.test.ts apps/worker-edge-guard/src/policy.test.ts apps/worker-post-events/src/consumer.test.ts
+bun run smoke:web:cf:services
+cargo check --manifest-path apps/auth-hasher-worker/Cargo.toml --target wasm32-unknown-unknown
 ```
 
-Run e2e against the in-process Pages-style `/rpc` handler (web-only):
-```bash
-bun run test:e2e:solo
-```
+Template hygiene rules:
 
-E2E notes:
-- `scripts/e2e-api.ts` starts `apps/api` at `127.0.0.1:3001` with a fresh temp sqlite DB file and relies on runtime migrations.
+- do not commit Playwright `test-results/`
+- do not commit `.wrangler/state`
+- do not commit temp SQLite files
+- keep checked-in OpenAPI output in sync with `bun run gen:openapi`
 
-## OpenAPI + Scalar Docs
+## Package Docs
 
-Generate and check in OpenAPI specs:
-```bash
-bun run gen:openapi
-```
-
-Verify checked-in specs match the generator output:
-```bash
-bun run verify:openapi
-```
-
-Docs and spec endpoints:
-- Scalar UI (web + bun api):
-  - `/api/docs` (API spec)
-  - `/api/docs/rpc` (Standard RPC wrapper spec)
-- Spec JSON (web redirects to checked-in static files; bun api serves the checked-in files):
-  - `/api/spec.json`
-  - `/api/spec.rpc.json`
-- Checked-in spec files (served by `apps/web` static assets):
-  - `apps/web/static/openapi/openapi.api.json`
-  - `apps/web/static/openapi/openapi.rpc.json`
-
-## Cloudflare Notes
-
-- Pages can either:
-  - proxy `/rpc` to dedicated API Workers via service bindings, or
-  - handle RPC in-process (single deployment) using D1.
-- Hyperdrive is Postgres-focused; this repo currently uses SQLite (Bun sqlite / D1). Supporting Hyperdrive would require a Postgres schema/adapter track.
+- [`apps/web/README.md`](./apps/web/README.md)
+- [`apps/auth-hasher-worker/README.md`](./apps/auth-hasher-worker/README.md)
+- [`packages/auth-hasher-contracts/README.md`](./packages/auth-hasher-contracts/README.md)
+- [`packages/auth-hasher-client/README.md`](./packages/auth-hasher-client/README.md)
+- [`packages/auth-hasher-better-auth-adapter/README.md`](./packages/auth-hasher-better-auth-adapter/README.md)
+- [`packages/auth-hasher/README.md`](./packages/auth-hasher/README.md)
+- [`apps/worker-edge-guard/README.md`](./apps/worker-edge-guard/README.md)
+- [`apps/worker-post-events/README.md`](./apps/worker-post-events/README.md)
+- [`packages/shared/README.md`](./packages/shared/README.md)
+- [`packages/db/README.md`](./packages/db/README.md)

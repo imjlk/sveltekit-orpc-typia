@@ -1,11 +1,16 @@
-name = "sveltekit-orpc-typia-web"
-compatibility_date = "2026-02-14"
+name = "cloudflare-first-starter-web"
+compatibility_date = "2026-02-12"
 compatibility_flags = ["nodejs_compat"]
 
 # SvelteKit adapter-cloudflare output directory.
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
 [vars]
+# Better Auth base URL for callback and cookie generation.
+# In production, set this to your deployed app origin.
+BETTER_AUTH_URL = "http://127.0.0.1:5173"
+BETTER_AUTH_SECRET = "dev-better-auth-secret-change-me"
+
 # When true, apps/web will handle /rpc in-process (no upstream proxy).
 ORPC_IN_PROCESS = "1"
 
@@ -14,3 +19,7 @@ binding = "DB"
 # Fill these in after `wrangler d1 create ...`
 database_name = "CHANGE_ME"
 database_id = "00000000-0000-0000-0000-000000000000"
+
+[[services]]
+binding = "AUTH_HASHER"
+service = "cloudflare-first-starter-auth-hasher"

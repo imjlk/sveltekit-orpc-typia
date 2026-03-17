@@ -1,8 +1,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { createGatewayHandler } from '@repo/gateway';
+import { getGatewayInternalHeaders } from '$lib/server/gateway-auth';
 
 const handler: RequestHandler = createGatewayHandler('api', {
-	isDev: import.meta.env.DEV
+	isDev: import.meta.env.DEV,
+	getInternalHeaders: (event) => getGatewayInternalHeaders(event as Parameters<typeof getGatewayInternalHeaders>[0])
 });
 
 export const GET: RequestHandler = handler;

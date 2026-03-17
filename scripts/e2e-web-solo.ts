@@ -68,7 +68,7 @@ const waitForSharedDist = async () => {
 const resolveE2eDbPath = () => {
   const provided = process.env.DATABASE_URL;
   if (provided) return provided;
-  return resolve(tmpdir(), `sveltekit-orpc-typia.e2e.solo.${process.pid}.${Date.now()}.sqlite`);
+  return resolve(tmpdir(), `cloudflare-first-starter.e2e.solo.${process.pid}.${Date.now()}.sqlite`);
 };
 
 const ensureDbDir = (dbPath: string) => {
@@ -115,7 +115,7 @@ try {
 
   const web = spawnPrefixed({
     name: 'web',
-    cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev', '--', '--host', '127.0.0.1', '--port', '5173'],
+    cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev', '--', '--host', '127.0.0.1', '--port', '4173'],
     env: {
       ...process.env,
       ORPC_IN_PROCESS: process.env.ORPC_IN_PROCESS ?? '1',

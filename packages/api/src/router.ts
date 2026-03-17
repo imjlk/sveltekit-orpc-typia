@@ -4,9 +4,9 @@ import { createCategoryRouter } from './modules/category/router';
 import { createCommentRouter } from './modules/comment/router';
 import { createPostRouter } from './modules/post/router';
 import { createTagRouter } from './modules/tag/router';
-import type { DbClient } from './types';
+import type { AppContext, DbClient } from './types';
 
-const app = implement(appContract);
+const app = implement(appContract).$context<AppContext>();
 
 export const createAppRouter = (db: DbClient) =>
   app.router({
@@ -17,4 +17,3 @@ export const createAppRouter = (db: DbClient) =>
   });
 
 export type AppRouter = ReturnType<typeof createAppRouter>;
-

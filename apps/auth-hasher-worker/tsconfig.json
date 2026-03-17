@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": ["bun", "@cloudflare/workers-types"]
+  },
+  "include": ["global.d.ts", "src/**/*.ts", "scripts/**/*.ts"]
+}

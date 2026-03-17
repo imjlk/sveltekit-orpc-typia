@@ -3,11 +3,11 @@ import { ORPCError, implement } from '@orpc/server';
 import { tagContract } from '@repo/shared';
 import { internalError } from '../../lib/errors';
 import { trimRequired } from '../../lib/input';
-import type { DbClient } from '../../types';
+import type { AppContext, DbClient } from '../../types';
 
 type TagInsert = typeof tags.$inferInsert;
 
-const tag = implement(tagContract);
+const tag = implement(tagContract).$context<AppContext>();
 
 export const createTagRouter = (db: DbClient) =>
   tag.router({

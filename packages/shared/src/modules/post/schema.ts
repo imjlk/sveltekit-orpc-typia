@@ -5,6 +5,7 @@ import type {
   CreatePostInput,
   GetPostWithCommentsInput,
   GetPostWithMetaInput,
+  PostActivity,
   Post,
   PostWithComments,
   PostWithMeta,
@@ -17,6 +18,7 @@ type CategoryRow = import('@repo/db/schema-types').CategoryRow;
 type CommentRow = import('@repo/db/schema-types').CommentRow;
 type TagRow = import('@repo/db/schema-types').TagRow;
 type PostTagRow = import('@repo/db/schema-types').PostTagRow;
+type PostActivityRow = import('@repo/db/schema-types').PostActivityRow;
 type PostWithCommentsRow = PostRow & { comments: CommentRow[] };
 type PostWithMetaRow = PostRow & {
   category: CategoryRow | null;
@@ -34,6 +36,21 @@ export const postSchema: StandardSchemaV1<PostRow, Post> = typiaMappedSchema(pos
 const postListDtoSchema = typiaSchema(typia.createValidate<Post[]>(), typia.json.schema<Post[]>());
 export const postListSchema: StandardSchemaV1<PostRow[], Post[]> = typiaMappedSchema(
   postListDtoSchema,
+  serializeForTransport,
+);
+
+const postActivityDtoSchema = typiaSchema(typia.createValidate<PostActivity>(), typia.json.schema<PostActivity>());
+export const postActivitySchema: StandardSchemaV1<PostActivityRow, PostActivity> = typiaMappedSchema(
+  postActivityDtoSchema,
+  serializeForTransport,
+);
+
+const postActivityListDtoSchema = typiaSchema(
+  typia.createValidate<PostActivity[]>(),
+  typia.json.schema<PostActivity[]>(),
+);
+export const postActivityListSchema: StandardSchemaV1<PostActivityRow[], PostActivity[]> = typiaMappedSchema(
+  postActivityListDtoSchema,
   serializeForTransport,
 );
 

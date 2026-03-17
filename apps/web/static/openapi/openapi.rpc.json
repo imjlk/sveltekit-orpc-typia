@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "sveltekit-orpc-typia (Standard RPC)",
+    "title": "Cloudflare First Starter RPC",
     "version": "0.0.0",
-    "description": "Standard RPC protocol docs for this repo.\n\nThis spec describes the `/rpc` endpoints but the payload is wrapped:\n\n- Request body: `{ \"json\": <input>, \"meta\"?: [...] }`\n- Response body: `{ \"json\": <output>, \"meta\"?: [...] }`\n"
+    "description": "Standard RPC protocol docs for the Cloudflare First Starter.\n\nThis spec describes the `/rpc` endpoints but the payload is wrapped:\n\n- Request body: `{ \"json\": <input>, \"meta\"?: [...] }`\n- Response body: `{ \"json\": <output>, \"meta\"?: [...] }`\n"
   },
   "servers": [
     {
@@ -37,6 +37,9 @@
             "type": "number"
           },
           "createdAt": {
+            "type": "string"
+          },
+          "authorId": {
             "type": "string"
           },
           "categoryId": {
@@ -85,6 +88,7 @@
         "required": [
           "id",
           "createdAt",
+          "authorId",
           "categoryId",
           "title",
           "content",
@@ -98,6 +102,9 @@
             "type": "number"
           },
           "createdAt": {
+            "type": "string"
+          },
+          "authorId": {
             "type": "string"
           },
           "categoryId": {
@@ -130,6 +137,9 @@
                   "name": {
                     "type": "string"
                   },
+                  "createdAt": {
+                    "type": "string"
+                  },
                   "parentId": {
                     "oneOf": [
                       {
@@ -139,16 +149,13 @@
                         "type": "number"
                       }
                     ]
-                  },
-                  "createdAt": {
-                    "type": "string"
                   }
                 },
                 "required": [
                   "id",
                   "name",
-                  "parentId",
-                  "createdAt"
+                  "createdAt",
+                  "parentId"
                 ]
               }
             ]
@@ -179,6 +186,7 @@
         "required": [
           "id",
           "createdAt",
+          "authorId",
           "categoryId",
           "title",
           "content",
@@ -250,6 +258,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "authorId": {
+                          "type": "string"
+                        },
                         "categoryId": {
                           "oneOf": [
                             {
@@ -270,6 +281,7 @@
                       "required": [
                         "id",
                         "createdAt",
+                        "authorId",
                         "categoryId",
                         "title",
                         "content"
@@ -299,7 +311,7 @@
     "/post/list": {
       "get": {
         "summary": "List posts",
-        "description": "Returns all posts.",
+        "description": "Returns posts for the authenticated user.",
         "tags": [
           "post"
         ],
@@ -322,6 +334,9 @@
                           "createdAt": {
                             "type": "string"
                           },
+                          "authorId": {
+                            "type": "string"
+                          },
                           "categoryId": {
                             "oneOf": [
                               {
@@ -342,9 +357,80 @@
                         "required": [
                           "id",
                           "createdAt",
+                          "authorId",
                           "categoryId",
                           "title",
                           "content"
+                        ]
+                      }
+                    },
+                    "meta": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "json"
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "oRPC error"
+          },
+          "5XX": {
+            "description": "oRPC error"
+          }
+        }
+      }
+    },
+    "/post/listActivity": {
+      "get": {
+        "summary": "List post activity",
+        "description": "Returns recent async post activity for the authenticated user.",
+        "tags": [
+          "post"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "json": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "eventId": {
+                            "type": "string"
+                          },
+                          "postId": {
+                            "type": "number"
+                          },
+                          "userId": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "eventId",
+                          "postId",
+                          "userId",
+                          "type"
                         ]
                       }
                     },

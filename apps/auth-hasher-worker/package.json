@@ -1,0 +1,21 @@
+{
+	"name": "auth-hasher-worker",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"build:kernel": "bun ./scripts/build-kernel.ts",
+		"dev": "wrangler dev --local",
+		"deploy": "wrangler deploy",
+		"check": "bun run build:kernel && bunx tsc -p tsconfig.json --noEmit && cargo check --manifest-path Cargo.toml --target wasm32-unknown-unknown",
+		"test": "bun test src/fetch-handler.test.ts src/kernel-node.test.ts"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.0.0",
+		"typescript": "^5.9.3",
+		"wrangler": "^4.0.0"
+	},
+	"dependencies": {
+		"@repo/auth-hasher-contracts": "workspace:*"
+	}
+}

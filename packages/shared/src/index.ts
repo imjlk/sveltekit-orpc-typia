@@ -3,6 +3,8 @@ export { serializeForTransport } from './transport/serialize';
 export * from './transport/openapi';
 export * from './transport/typia';
 export * from './transport/scalar';
+export * from './transport/auth-bridge';
+export * from './capabilities';
 export * from './errors/types';
 export * from './errors/schema';
 export * from './errors/common';
@@ -10,6 +12,7 @@ export type {
   CreatePostInput,
   GetPostWithCommentsInput,
   GetPostWithMetaInput,
+  PostActivity,
   Post,
   PostWithComments,
   PostWithMeta,

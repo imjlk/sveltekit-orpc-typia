@@ -1,8 +1,8 @@
 {
   "info": {
-    "title": "sveltekit-orpc-typia",
+    "title": "Cloudflare First Starter API",
     "version": "0.0.0",
-    "description": "Contract-first API docs generated from oRPC contracts.\n\n- REST(OpenAPI-style): `/api/<router>/<procedure>`\n- Standard RPC: `/rpc/<router>/<procedure>` (documented separately)\n- Specs:\n  - `/openapi/openapi.api.json` (REST)\n  - `/openapi/openapi.rpc.json` (Standard RPC wrapper)\n"
+    "description": "Contract-first API docs generated from shared oRPC contracts.\n\n- REST(OpenAPI-style): `/api/<router>/<procedure>`\n- Standard RPC: `/rpc/<router>/<procedure>` (documented separately)\n- Auth: `/auth/*` (handled by Better Auth, intentionally separate from `/api/*`)\n- Specs:\n  - `/openapi/openapi.api.json` (REST)\n  - `/openapi/openapi.rpc.json` (Standard RPC wrapper)\n"
   },
   "servers": [
     {
@@ -33,6 +33,9 @@
                     "createdAt": {
                       "type": "string"
                     },
+                    "authorId": {
+                      "type": "string"
+                    },
                     "categoryId": {
                       "oneOf": [
                         {
@@ -53,6 +56,7 @@
                   "required": [
                     "id",
                     "createdAt",
+                    "authorId",
                     "categoryId",
                     "title",
                     "content"
@@ -82,6 +86,126 @@
                         "message": {
                           "type": "string",
                           "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "429",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "TOO_MANY_REQUESTS"
+                        },
+                        "status": {
+                          "const": 429
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Too Many Requests"
                         },
                         "data": {}
                       },
@@ -188,7 +312,7 @@
       "get": {
         "operationId": "post.list",
         "summary": "List posts",
-        "description": "Returns all posts.",
+        "description": "Returns posts for the authenticated user.",
         "tags": [
           "post"
         ],
@@ -206,6 +330,9 @@
                         "type": "number"
                       },
                       "createdAt": {
+                        "type": "string"
+                      },
+                      "authorId": {
                         "type": "string"
                       },
                       "categoryId": {
@@ -228,6 +355,7 @@
                     "required": [
                       "id",
                       "createdAt",
+                      "authorId",
                       "categoryId",
                       "title",
                       "content"
@@ -258,6 +386,299 @@
                         "message": {
                           "type": "string",
                           "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "INTERNAL_SERVER_ERROR"
+                        },
+                        "status": {
+                          "const": 500
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Internal Server Error"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/post/listActivity": {
+      "get": {
+        "operationId": "post.listActivity",
+        "summary": "List post activity",
+        "description": "Returns recent async post activity for the authenticated user.",
+        "tags": [
+          "post"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "eventId": {
+                        "type": "string"
+                      },
+                      "postId": {
+                        "type": "number"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "createdAt",
+                      "eventId",
+                      "postId",
+                      "userId",
+                      "type"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
                         },
                         "data": {}
                       },
@@ -400,6 +821,66 @@
                         "message": {
                           "type": "string",
                           "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
                         },
                         "data": {}
                       },
@@ -602,6 +1083,66 @@
                         "message": {
                           "type": "string",
                           "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
                         },
                         "data": {}
                       },
@@ -1926,6 +2467,9 @@
           "createdAt": {
             "type": "string"
           },
+          "authorId": {
+            "type": "string"
+          },
           "categoryId": {
             "oneOf": [
               {
@@ -1972,6 +2516,7 @@
         "required": [
           "id",
           "createdAt",
+          "authorId",
           "categoryId",
           "title",
           "content",
@@ -1985,6 +2530,9 @@
             "type": "number"
           },
           "createdAt": {
+            "type": "string"
+          },
+          "authorId": {
             "type": "string"
           },
           "categoryId": {
@@ -2017,6 +2565,9 @@
                   "name": {
                     "type": "string"
                   },
+                  "createdAt": {
+                    "type": "string"
+                  },
                   "parentId": {
                     "oneOf": [
                       {
@@ -2026,16 +2577,13 @@
                         "type": "number"
                       }
                     ]
-                  },
-                  "createdAt": {
-                    "type": "string"
                   }
                 },
                 "required": [
                   "id",
                   "name",
-                  "parentId",
-                  "createdAt"
+                  "createdAt",
+                  "parentId"
                 ]
               }
             ]
@@ -2066,6 +2614,7 @@
         "required": [
           "id",
           "createdAt",
+          "authorId",
           "categoryId",
           "title",
           "content",

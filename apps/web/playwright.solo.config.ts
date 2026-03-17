@@ -5,12 +5,12 @@ export default defineConfig({
   fullyParallel: true,
   use: {
     headless: true,
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: 'http://127.0.0.1:4173',
   },
   webServer: {
     command: 'bun ../../scripts/e2e-web-solo.ts',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: true,
+    url: 'http://127.0.0.1:4173',
+    reuseExistingServer: false,
     timeout: 120_000,
   },
   projects: [
@@ -20,4 +20,3 @@ export default defineConfig({
     },
   ],
 });
-

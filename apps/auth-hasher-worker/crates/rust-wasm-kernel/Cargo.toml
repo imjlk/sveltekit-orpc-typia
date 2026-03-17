@@ -1,0 +1,12 @@
+[package]
+name = "auth-hasher-rust-wasm-kernel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Raw Wasm password hashing kernel for the auth hasher Worker."
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+auth-hasher-hash-core = { path = "../hash-core" }

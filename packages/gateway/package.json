@@ -17,6 +17,7 @@
   "dependencies": {
     "@orpc/server": "^1.13.5",
     "@repo/api": "workspace:*",
+    "@repo/db": "workspace:*",
     "@repo/shared": "workspace:*",
     "json-schema-typed": "^8.0.2"
   }

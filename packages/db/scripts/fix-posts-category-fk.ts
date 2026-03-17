@@ -1,7 +1,6 @@
 import { Database } from "bun:sqlite";
-import { fileURLToPath } from "node:url";
+import { defaultDbPath } from "../src/bun";
 
-const defaultDbPath = fileURLToPath(new URL("../sqlite.db", import.meta.url));
 const dbPath = process.argv[2] ?? process.env.DATABASE_URL ?? defaultDbPath;
 
 const db = new Database(dbPath);
@@ -80,4 +79,3 @@ if (!hasCategoryFk()) {
 }
 
 console.log("Added posts.category_id -> categories.id foreign key");
-

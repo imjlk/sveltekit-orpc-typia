@@ -1,0 +1,20 @@
+name = "cloudflare-first-starter-worker-edge-guard"
+main = "src/index.ts"
+compatibility_date = "2026-02-12"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+EDGE_GUARD_MODE = "ratelimit"
+
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "CHANGE_ME"
+simple = { limit = 5, period = 60 }
+
+[[durable_objects.bindings]]
+name = "RATE_LIMITER_STATE"
+class_name = "RateLimiterState"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimiterState"]

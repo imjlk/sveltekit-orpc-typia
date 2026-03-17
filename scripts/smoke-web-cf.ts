@@ -6,7 +6,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 const root = resolve(import.meta.dir, '..');
 const port = Number(process.env.PORT ?? 5173);
 
-const persistDir = mkdtempSync(resolve(tmpdir(), 'sveltekit-orpc-typia.cf-state.'));
+const persistDir = mkdtempSync(resolve(tmpdir(), 'cloudflare-first-starter.cf-state.'));
 const drizzleDir = resolve(root, 'packages/db/drizzle');
 const webCwd = resolve(root, 'apps/web');
 

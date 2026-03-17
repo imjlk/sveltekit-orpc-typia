@@ -1,0 +1,22 @@
+{
+  "artifactPreset": "standard-2026q1",
+  "artifactArgon2id": {
+    "memoryKiB": 12288,
+    "timeCost": 3,
+    "parallelism": 1,
+    "outputLength": 32
+  },
+  "artifactOwaspAligned": true,
+  "artifactSourceChecksum": "d6b91f6f0637c8802bc4f38693cf506d88cdf8b0792d44f9c237af80ee0ea6d4",
+  "generatedBy": "bun run build:kernel",
+  "inputs": [
+    "Cargo.lock",
+    "Cargo.toml",
+    "package.json",
+    "crates/hash-core/Cargo.toml",
+    "crates/hash-core/src/lib.rs",
+    "crates/rust-wasm-kernel/Cargo.toml",
+    "crates/rust-wasm-kernel/src/lib.rs",
+    "scripts/build-kernel.ts"
+  ]
+}

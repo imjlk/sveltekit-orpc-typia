@@ -4,7 +4,7 @@ import { renderScalarDocsHtml } from '@repo/shared';
 export const GET: RequestHandler = async () => {
 	const html = renderScalarDocsHtml({
 		specUrl: '/api/spec.rpc.json',
-		title: 'sveltekit-orpc-typia RPC (Standard RPC)'
+		title: 'Cloudflare First Starter RPC'
 	});
 
 	return new Response(html, {

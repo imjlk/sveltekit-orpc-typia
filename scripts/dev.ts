@@ -1,9 +1,12 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 type ProcSpec = {
   name: string;
   cmd: string[];
+  env?: Record<string, string | undefined>;
 };
 
 const root = process.cwd();
@@ -43,7 +46,7 @@ const spawnPrefixed = (spec: ProcSpec) => {
     cwd: root,
     stdout: 'pipe',
     stderr: 'pipe',
-    env: process.env,
+    env: spec.env ?? process.env,
   });
 
   void pipeStream(spec.name, child.stdout);
@@ -62,6 +65,17 @@ const waitForSharedDist = async () => {
   }
 
   throw new Error(`Timed out waiting for ${sharedDistEntry}`);
+};
+
+const resolveDevDbPath = () => {
+  const provided = process.env.DATABASE_URL;
+  if (provided) return provided;
+
+  return resolve(tmpdir(), 'cloudflare-first-starter.dev.shared.sqlite');
+};
+
+const ensureDbDir = (dbPath: string) => {
+  mkdirSync(dirname(dbPath), { recursive: true });
 };
 
 const specs: ProcSpec[] = [
@@ -91,6 +105,9 @@ process.on('SIGTERM', () => {
 });
 
 try {
+  const dbPath = resolveDevDbPath();
+  ensureDbDir(dbPath);
+
   for (const spec of specs) {
     children.push(spawnPrefixed(spec));
   }
@@ -98,10 +115,24 @@ try {
   await waitForSharedDist();
 
   children.push(
-    spawnPrefixed({ name: 'api', cmd: ['bun', 'run', '--cwd', 'apps/api', 'dev'] }),
+    spawnPrefixed({
+      name: 'api',
+      cmd: ['bun', 'run', '--cwd', 'apps/api', 'dev'],
+      env: {
+        ...process.env,
+        DATABASE_URL: dbPath,
+      },
+    }),
   );
   children.push(
-    spawnPrefixed({ name: 'web', cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev'] }),
+    spawnPrefixed({
+      name: 'web',
+      cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev'],
+      env: {
+        ...process.env,
+        DATABASE_URL: dbPath,
+      },
+    }),
   );
 
   // Keep alive until a child exits.
@@ -113,4 +144,3 @@ try {
   console.error(err);
   process.exit(1);
 }
-
