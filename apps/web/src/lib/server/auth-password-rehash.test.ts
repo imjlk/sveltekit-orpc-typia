@@ -7,7 +7,10 @@ import { randomUUID } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { maybeRehashCredentialPasswordAfterEmailSignIn } from './auth-password-rehash';
+import {
+	maybeRehashCredentialPasswordAfterAuthResponse,
+	maybeRehashCredentialPasswordAfterEmailSignIn
+} from './auth-password-rehash';
 
 const cleanupPaths = new Set<string>();
 
@@ -128,6 +131,100 @@ describe('auth password rehash', () => {
 		expect(outcome).toEqual({
 			status: 'skipped',
 			reason: 'no-binding'
+		});
+	});
+
+	test('extracts password and user id from auth sign-in request and response', async () => {
+		const { db } = await createTestDb();
+		const userId = randomUUID();
+		const now = new Date();
+		const upgradedHash =
+			'$argon2id$v=19$m=12288,t=3,p=1$c29tZXNhbHQxMjM0NTY$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+		await db.insert(users).values({
+			id: userId,
+			name: 'Starter User',
+			email: 'starter@example.com',
+			emailVerified: true,
+			image: null,
+			createdAt: now,
+			updatedAt: now
+		});
+
+		await db.insert(accounts).values({
+			id: randomUUID(),
+			accountId: userId,
+			providerId: 'credential',
+			userId,
+			accessToken: null,
+			refreshToken: null,
+			idToken: null,
+			accessTokenExpiresAt: null,
+			refreshTokenExpiresAt: null,
+			scope: null,
+			password: 'legacy-salt:abcdef',
+			createdAt: now,
+			updatedAt: now
+		});
+
+		const outcome = await maybeRehashCredentialPasswordAfterAuthResponse(
+			{
+				url: new URL('https://starter.example.com'),
+				platform: {
+					env: {
+						AUTH_HASHER: {
+							hashPassword: async () => upgradedHash,
+							verifyPassword: async () => true,
+							fetch: async () =>
+								new Response(
+									JSON.stringify({
+										algorithm: 'argon2id',
+										version: '0.1.0',
+										artifactSourceChecksum: 'checksum',
+										preset: 'standard-2026q1',
+										argon2id: {
+											memoryKiB: 12 * 1024,
+											timeCost: 3,
+											parallelism: 1,
+											outputLength: 32
+										},
+										rpc: ['hashPassword', 'verifyPassword'],
+										owaspAligned: true
+									}),
+									{
+										status: 200,
+										headers: { 'content-type': 'application/json; charset=utf-8' }
+									}
+								)
+						}
+					}
+				}
+			},
+			new Request('https://starter.example.com/auth/sign-in/email', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					email: 'starter@example.com',
+					password: 'password1234'
+				})
+			}),
+			new Response(
+				JSON.stringify({
+					user: {
+						id: userId
+					}
+				}),
+				{
+					status: 200,
+					headers: { 'content-type': 'application/json; charset=utf-8' }
+				}
+			),
+			db
+		);
+
+		expect(outcome).toEqual({
+			status: 'updated',
+			reasons: ['legacy-scrypt-format']
 		});
 	});
 });

@@ -106,12 +106,77 @@ export const maybeRehashCredentialPasswordAfterEmailSignIn = async (
 	}
 
 	await authDb
-		.update(accounts)
-		.set({
+	.update(accounts)
+	.set({
 			password: updatedHash,
 			updatedAt: new Date()
 		})
 		.where(and(eq(accounts.id, credentialAccount.id), eq(accounts.password, credentialAccount.password)));
 
 	return { status: 'updated', reasons: assessment.reasons };
+};
+
+const isEmailPasswordSignInRequest = (request: Request): boolean => {
+	const url = new URL(request.url);
+	return request.method === 'POST' && url.pathname.endsWith('/auth/sign-in/email');
+};
+
+const readPasswordFromRequest = async (request: Request): Promise<string | null> => {
+	const contentType = request.headers.get('content-type') ?? '';
+
+	if (contentType.includes('application/json')) {
+		const json = (await request.json().catch(() => null)) as { password?: unknown } | null;
+		return typeof json?.password === 'string' && json.password.length > 0 ? json.password : null;
+	}
+
+	if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+		const formData = await request.formData().catch(() => null);
+		const password = formData?.get('password');
+		return typeof password === 'string' && password.length > 0 ? password : null;
+	}
+
+	return null;
+};
+
+const readUserIdFromSignInResponse = async (response: Response): Promise<string | null> => {
+	if (!response.ok) {
+		return null;
+	}
+
+	const contentType = response.headers.get('content-type') ?? '';
+	if (!contentType.includes('application/json')) {
+		return null;
+	}
+
+	const json = (await response.json().catch(() => null)) as { user?: { id?: unknown } } | null;
+	return typeof json?.user?.id === 'string' && json.user.id.length > 0 ? json.user.id : null;
+};
+
+export const maybeRehashCredentialPasswordAfterAuthResponse = async (
+	event: EventLike,
+	request: Request,
+	response: Response,
+	db?: AuthDb
+): Promise<RehashOutcome | null> => {
+	if (!isEmailPasswordSignInRequest(request)) {
+		return null;
+	}
+
+	const [password, userId] = await Promise.all([
+		readPasswordFromRequest(request),
+		readUserIdFromSignInResponse(response)
+	]);
+
+	if (!password || !userId) {
+		return null;
+	}
+
+	return maybeRehashCredentialPasswordAfterEmailSignIn(
+		event,
+		{
+			userId,
+			password
+		},
+		db
+	);
 };

@@ -1,7 +1,6 @@
 import { executeAuthJsonAction } from '$lib/server/auth-request';
 import { fail, redirect } from '@sveltejs/kit';
 import { normalizeNextPath } from '$lib/auth/next';
-import { maybeRehashCredentialPasswordAfterEmailSignIn } from '$lib/server/auth-password-rehash';
 import { resolveSocialAuth } from '$lib/server/auth-social';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -25,7 +24,7 @@ export const actions: Actions = {
 		const password = String(formData.get('password') ?? '');
 		const nextPath = normalizeNextPath(String(formData.get('next') ?? ''));
 
-		const { data, response } = await executeAuthJsonAction<{ message?: string; user?: { id?: string } }>(
+		const { data, response } = await executeAuthJsonAction<{ message?: string }>(
 			event,
 			'/auth/sign-in/email',
 			{
@@ -40,17 +39,6 @@ export const actions: Actions = {
 				values: { email },
 				formError: data?.message ?? 'Unable to sign in.'
 			});
-		}
-
-		if (data?.user?.id) {
-			try {
-				await maybeRehashCredentialPasswordAfterEmailSignIn(event, {
-					userId: data.user.id,
-					password
-				});
-			} catch (error) {
-				console.error('[auth] automatic password rehash failed', error);
-			}
 		}
 
 		throw redirect(303, nextPath);

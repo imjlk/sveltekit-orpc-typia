@@ -1,6 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { parseSetCookieHeader, splitSetCookieHeader } from 'better-auth/cookies';
-import { createAuth } from './auth';
+import { handleAuthRequest } from './auth';
 
 export const getSetCookieHeaders = (response: Response): string[] => {
 	const getSetCookie = Reflect.get(response.headers, 'getSetCookie');
@@ -37,7 +37,6 @@ export const executeAuthJsonAction = async <T>(
 	path: string,
 	body?: Record<string, unknown>,
 ): Promise<{ data: T | null; response: Response }> => {
-	const { auth } = await createAuth(event);
 	const headers = new Headers({
 		'content-type': 'application/json'
 	});
@@ -49,7 +48,8 @@ export const executeAuthJsonAction = async <T>(
 		}
 	}
 
-	const response = await auth.handler(
+	const response = await handleAuthRequest(
+		event,
 		new Request(new URL(path, event.url), {
 			method: 'POST',
 			headers,

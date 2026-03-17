@@ -6,6 +6,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { betterAuth } from 'better-auth/minimal';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { createAuthPasswordHasher } from './auth-password-hasher';
+import { maybeRehashCredentialPasswordAfterAuthResponse } from './auth-password-rehash';
 import { isCloudflareRuntime, shouldAllowLocalAuthFallback } from './auth-runtime';
 import { resolveSocialAuth } from './auth-social';
 
@@ -86,4 +87,21 @@ export const createAuth = async (event: RequestEvent) => {
 	});
 
 	return { auth };
+};
+
+export const handleAuthRequest = async (
+	event: RequestEvent,
+	request: Request = event.request,
+): Promise<Response> => {
+	const { auth } = await createAuth(event);
+	const rehashRequest = request.clone();
+	const response = await auth.handler(request);
+
+	try {
+		await maybeRehashCredentialPasswordAfterAuthResponse(event, rehashRequest as Request, response.clone());
+	} catch (error) {
+		console.error('[auth] automatic password rehash failed', error);
+	}
+
+	return response;
 };
