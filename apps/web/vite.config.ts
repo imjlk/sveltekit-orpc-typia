@@ -1,5 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import UnpluginTypia from '@kennethwkz/unplugin-typia/vite';
+import UnpluginTypia from '@typia/unplugin/vite';
 import path from 'node:path';
 import { defineConfig } from 'vite';
 
