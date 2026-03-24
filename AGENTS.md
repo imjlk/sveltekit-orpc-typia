@@ -21,6 +21,7 @@ Default shipped stack:
 - Drizzle + D1 as the default database path
 - Better Auth under `/auth/*`
 - optional Cloudflare service-binding splits
+- optional OG image rendering via `OG_WORKER`
 - `AUTH_HASHER` as a TypeScript Worker shell backed by a Rust Wasm kernel
 
 Keep that positioning honest in code and docs.
@@ -52,7 +53,10 @@ Keep that positioning honest in code and docs.
    - serves UI plus `/auth`, `/rpc`, and `/api`
 11. `apps/worker-content`, `apps/worker-meta`
    - optional split Cloudflare Workers for service-binding deployments.
-12. `apps/auth-hasher-worker`
+12. `apps/worker-og`
+   - optional HTTP Worker for OG image rendering.
+   - serves `/render.png` and supports basic query-driven branding options.
+13. `apps/auth-hasher-worker`
    - `AUTH_HASHER` service Worker.
    - TypeScript `WorkerEntrypoint` shell plus Rust Wasm kernel crates.
 
@@ -60,6 +64,7 @@ Keep that positioning honest in code and docs.
 
 - Install: `bun install`
 - Full local dev: `bun run dev`
+- OG worker only: `bun run dev:og-worker`
 - Web only, in-process RPC: `bun run dev:web:solo`
 - Web on local Cloudflare Pages + D1: `bun run dev:web:cf`
 - Web on local Pages + split Worker services: `bun run dev:web:cf:services`
@@ -128,6 +133,7 @@ When contracts change, regenerate the checked-in specs:
 - Bun or local runtime uses SQLite through `@repo/db/bun`.
 - Cloudflare runtime uses D1 through `@repo/db/d1`.
 - The gateway should pass authenticated user state through the signed auth bridge headers, not by leaking Better Auth session internals into downstream apps.
+- `/og.png` lives in `apps/web` and should proxy to `OG_WORKER` or `OG_WORKER_BASE_URL` when that optional capability is enabled.
 
 ## Auth Rules
 
@@ -157,7 +163,7 @@ When contracts change, regenerate the checked-in specs:
   - `packages/api/src/lib/errors.ts`
 - If you touch workspace imports used by `apps/web`, keep SvelteKit aliasing and Vite aliasing in sync.
   - SvelteKit aliases live in `apps/web/svelte.config.js`.
-- If you change Wrangler bindings for `apps/web`, `apps/worker-edge-guard`, or `apps/worker-post-events`, rerun `bun run types:cf`.
+- If you change Wrangler bindings for `apps/web`, `apps/worker-edge-guard`, `apps/worker-post-events`, or `apps/worker-og`, rerun `bun run types:cf`.
 - OpenAPI files under `apps/web/static/openapi/` are generated artifacts. Do not hand-edit them.
 
 ## Current Caveats

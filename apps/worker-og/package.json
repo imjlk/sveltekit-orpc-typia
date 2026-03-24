@@ -1,0 +1,20 @@
+{
+  "name": "worker-og",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "types:cf": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false",
+    "types:cf:check": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false --check"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "@cf-wasm/resvg": "^0.3.3",
+    "@repo/shared": "workspace:*"
+  }
+}

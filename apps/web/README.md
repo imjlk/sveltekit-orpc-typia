@@ -20,6 +20,8 @@ Key routes:
   sign-up, sign-in, and Better Auth handler surface
 - `/posts`
   minimal protected CRUD example scoped to the signed-in user
+- `/og.png`
+  optional OG image route backed by the `OG_WORKER` capability example
 - `/api/docs`
   Scalar UI for the checked-in REST spec
 - `/api/docs/rpc`
@@ -37,14 +39,14 @@ Runtime modes:
 Advanced reference mode:
 
 - `bun run dev:web:cf:services`
-  capability example setup with `EDGE_GUARD` and `POST_EVENTS`
-  on `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session, and `post_activity` is projected inline to keep the example visible
+  capability example setup with `EDGE_GUARD`, `POST_EVENTS`, and `OG_WORKER`
+  on `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session, `post_activity` is projected inline to keep the example visible, and `/og.png` prefers `OG_WORKER_BASE_URL` before the `OG_WORKER` service binding
 
 Cloudflare-first bindings:
 
 - required: `DB`, `AUTH_HASHER`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
 - optional: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
-- advanced capability bindings: `EDGE_GUARD`, `POST_EVENTS`
+- advanced capability bindings: `EDGE_GUARD`, `POST_EVENTS`, `OG_WORKER`
 - legacy reference bindings: `ORPC_DEFAULT`, `ORPC_<ROUTER>`
 
 Secret handling:

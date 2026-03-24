@@ -32,6 +32,10 @@ database_id = "00000000-0000-0000-0000-000000000000"
 binding = "AUTH_HASHER"
 service = "cloudflare-first-starter-auth-hasher"
 
+[[services]]
+binding = "OG_WORKER"
+service = "cloudflare-first-starter-worker-og"
+
 [queues]
 producers = [
   { binding = "POST_EVENTS", queue = "cloudflare-first-starter-post-events" }

@@ -17,9 +17,11 @@ const port = Number(process.env.PORT ?? 5173);
 const edgeGuardPort = Number(process.env.EDGE_GUARD_PORT ?? 8788);
 const postEventsPort = Number(process.env.POST_EVENTS_PORT ?? 8789);
 const authHasherPort = Number(process.env.AUTH_HASHER_PORT ?? 8790);
+const ogWorkerPort = Number(process.env.OG_WORKER_PORT ?? 8791);
 const edgeGuardInspectorPort = Number(process.env.EDGE_GUARD_INSPECTOR_PORT ?? 9230);
 const postEventsInspectorPort = Number(process.env.POST_EVENTS_INSPECTOR_PORT ?? 9231);
 const authHasherInspectorPort = Number(process.env.AUTH_HASHER_INSPECTOR_PORT ?? 9233);
+const ogWorkerInspectorPort = Number(process.env.OG_WORKER_INSPECTOR_PORT ?? 9234);
 const pagesInspectorPort = Number(process.env.PAGES_INSPECTOR_PORT ?? 9232);
 
 const webCwd = resolve(root, 'apps/web');
@@ -167,11 +169,13 @@ try {
 	const postEventsWranglerToml = resolve(root, 'apps/worker-post-events/wrangler.toml');
 	const edgeGuardWranglerToml = resolve(root, 'apps/worker-edge-guard/wrangler.toml');
 	const authHasherWranglerToml = resolve(root, 'apps/auth-hasher-worker/wrangler.toml');
+	const ogWorkerWranglerToml = resolve(root, 'apps/worker-og/wrangler.toml');
 
 	const webInfo = readWranglerTomlInfo(webWranglerToml);
 	const postEventsInfo = readWranglerTomlInfo(postEventsWranglerToml);
 	const edgeGuardInfo = readWranglerTomlInfo(edgeGuardWranglerToml);
 	const authHasherInfo = readWranglerTomlInfo(authHasherWranglerToml);
+	const ogWorkerInfo = readWranglerTomlInfo(ogWorkerWranglerToml);
 
 	ensureSharedD1Config([
 		{ filePath: webWranglerToml, databaseId: webInfo.databaseId },
@@ -180,11 +184,16 @@ try {
 
   const edgeGuardWorkerName = edgeGuardInfo.name ?? 'cloudflare-first-starter-worker-edge-guard';
   const authHasherWorkerName = authHasherInfo.name ?? 'cloudflare-first-starter-auth-hasher';
+  const ogWorkerName = ogWorkerInfo.name ?? 'cloudflare-first-starter-worker-og';
   const pagesConfig = readFileSync(resolve(webCwd, 'wrangler.services.toml'), 'utf8');
   const pagesConfigWithAuth = upsertTomlVar(
-    upsertTomlVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
-    'BETTER_AUTH_SECRET',
-    defaultBetterAuthSecret,
+    upsertTomlVar(
+      upsertTomlVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
+      'BETTER_AUTH_SECRET',
+      defaultBetterAuthSecret,
+    ),
+    'OG_WORKER_BASE_URL',
+    `http://127.0.0.1:${ogWorkerPort}`,
   );
   writeFileSync(resolve(pagesConfigDir, 'wrangler.toml'), pagesConfigWithAuth);
 
@@ -265,6 +274,30 @@ try {
 
 	children.push(
 		spawnPrefixed({
+			name: 'worker:og',
+			cwd: resolve(root, 'apps/worker-og'),
+			cmd: [
+				'bunx',
+				'--silent',
+				'wrangler',
+				'dev',
+				'--local',
+				'--ip',
+				'127.0.0.1',
+				'--port',
+				String(ogWorkerPort),
+				'--persist-to',
+				persistDir,
+				'--inspector-port',
+				String(ogWorkerInspectorPort),
+				'--log-level',
+				'warn'
+			]
+		})
+	);
+
+	children.push(
+		spawnPrefixed({
 			name: 'pages',
 			cwd: pagesConfigDir,
 			cmd: [
@@ -287,7 +320,9 @@ try {
 				'--service',
 				`EDGE_GUARD=${edgeGuardWorkerName}`,
 				'--service',
-				`AUTH_HASHER=${authHasherWorkerName}`
+				`AUTH_HASHER=${authHasherWorkerName}`,
+				'--service',
+				`OG_WORKER=${ogWorkerName}`
 			]
 		})
 	);

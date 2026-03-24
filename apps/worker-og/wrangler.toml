@@ -1,0 +1,22 @@
+name = "cloudflare-first-starter-worker-og"
+main = "src/index.ts"
+compatibility_date = "2026-02-12"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = true
+persist = true
+
+[[ratelimits]]
+name = "OG_RATE_LIMIT"
+namespace_id = "CHANGE_ME"
+simple = { limit = 120, period = 60 }

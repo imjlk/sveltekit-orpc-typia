@@ -38,6 +38,7 @@ type PlatformEnv = Partial<Omit<Cloudflare.Env, 'AUTH_HASHER'>> & {
 	AUTH_HASHER_ENABLE_METADATA_ROUTE?: string;
 	AUTH_HASHER?: AuthHasherBinding;
 	EDGE_GUARD?: EdgeGuardBinding;
+	OG_WORKER?: Fetcher;
 	POST_EVENTS?: Queue<PostEventMessage>;
 	ORPC_DEFAULT?: Fetcher;
 	ORPC_API?: Fetcher;
@@ -49,6 +50,7 @@ type PlatformEnv = Partial<Omit<Cloudflare.Env, 'AUTH_HASHER'>> & {
 	R2?: R2Bucket;
 	APP_STATE?: DurableObjectNamespace;
 	HYPERDRIVE?: HyperdriveBinding;
+	OG_WORKER_BASE_URL?: string;
 	[key: string]: unknown;
 };
 

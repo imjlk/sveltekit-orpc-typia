@@ -11,10 +11,11 @@ Korean translation: [`README_ko.md`](./README_ko.md)
 - `Drizzle` + `D1` as the default relational data path
 - `better-auth` mounted under `/auth/*`
 - an in-process gateway for `/rpc/*` and `/api/*` by default
+- an optional `/og.png` route backed by a dedicated OG Worker
 - a minimal auth-scoped CRUD example under `/posts`
 - an internal `AUTH_HASHER` Worker with a TypeScript shell and Rust Wasm kernel
 - automatic password rehash on successful email/password sign-in when the stored hash is older than the active `AUTH_HASHER` preset
-- optional advanced examples for `EDGE_GUARD` rate limiting and `POST_EVENTS` async projection
+- optional advanced examples for `EDGE_GUARD` rate limiting, `POST_EVENTS` async projection, and `OG_WORKER` image rendering
 
 This template is intentionally opinionated. It is not trying to be infra-agnostic.
 
@@ -41,6 +42,7 @@ Default public surface:
 - `/api/*`
 - `/api/docs`
 - `/api/docs/rpc`
+- `/og.png` when the optional OG worker is attached
 
 The recommended extension path stays explicit:
 
@@ -96,6 +98,7 @@ bun run --cwd apps/auth-hasher-worker deploy
 
 For local-only secrets and D1 HTTP migration config, copy from [apps/web/.dev.vars.example](./apps/web/.dev.vars.example).
 After changing Wrangler bindings in `apps/web`, `apps/worker-edge-guard`, or `apps/worker-post-events`, regenerate the checked-in binding types with `bun run types:cf`.
+If you also change the optional OG worker bindings, rerun `bun run types:cf` as well.
 
 ## Advanced Examples
 
@@ -111,6 +114,7 @@ flowchart LR
     APP -. optional queue send .-> Q["POST_EVENTS Queue"]
     Q --> C["post-events Consumer Worker"]
     C --> DB
+    W -. optional image render .-> OG["OG_WORKER"]
 ```
 
 Use extra Workers only when Cloudflare capabilities are the reason:
@@ -118,14 +122,16 @@ Use extra Workers only when Cloudflare capabilities are the reason:
 - rate limiting
 - coordinated edge state
 - async side effects
+- dedicated image rendering and cache isolation
 - Durable Object backed workflows
 
 Current notes:
 
 - `bun run dev:web:cf:services` is an advanced reference mode only.
-- It boots the capability example path: `EDGE_GUARD` + `POST_EVENTS`.
+- It boots the capability example path: `EDGE_GUARD` + `POST_EVENTS` + `OG_WORKER`.
 - On `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session.
 - On `localhost`, `post_activity` is also projected inline so the advanced example stays visible even when local Queue emulation lags.
+- On `localhost`, `/og.png` prefers `OG_WORKER_BASE_URL` and falls back to the `OG_WORKER` service binding.
 - `apps/worker-content` and `apps/worker-meta` are transitionary reference implementations for service-binding experiments.
 - They are not the recommended default topology for this template.
 - They remain in the repo only as legacy references.
@@ -136,6 +142,8 @@ Advanced example bindings:
   service binding for cross-cutting post creation policy
 - `POST_EVENTS`
   Queue producer used to project `post.created` into `post_activity`
+- `OG_WORKER`
+  optional HTTP worker used to render `/og.png` as PNG
 - `RATE_LIMITER_STATE`
   Durable Object namespace used only when `EDGE_GUARD_MODE=do`
 
@@ -144,6 +152,7 @@ Advanced example files:
 - [`apps/web/wrangler.services.toml`](./apps/web/wrangler.services.toml)
 - [`apps/worker-edge-guard`](./apps/worker-edge-guard)
 - [`apps/worker-post-events`](./apps/worker-post-events)
+- [`apps/worker-og`](./apps/worker-og)
 
 ## Validation Bar
 
@@ -154,7 +163,7 @@ bun install --frozen-lockfile
 bun run check
 bun run test:e2e
 bun run --cwd apps/web test:e2e:solo
-bun test packages/auth-hasher-contracts/test/index.test.ts packages/auth-hasher-client/test/index.test.ts packages/api/src/lib/capabilities.test.ts packages/gateway/src/resolver.test.ts packages/shared/test/auth-bridge.test.ts apps/web/src/lib/server/auth-social.test.ts apps/web/src/lib/server/auth-password-hasher.test.ts apps/web/src/lib/server/auth-password-rehash.test.ts apps/auth-hasher-worker/src/fetch-handler.test.ts apps/auth-hasher-worker/src/kernel-node.test.ts apps/worker-edge-guard/src/policy.test.ts apps/worker-post-events/src/consumer.test.ts
+bun test packages/auth-hasher-contracts/test/index.test.ts packages/auth-hasher-client/test/index.test.ts packages/api/src/lib/capabilities.test.ts packages/gateway/src/resolver.test.ts packages/shared/test/auth-bridge.test.ts packages/shared/test/og-template.test.ts apps/web/src/lib/server/auth-social.test.ts apps/web/src/lib/server/auth-password-hasher.test.ts apps/web/src/lib/server/auth-password-rehash.test.ts apps/web/src/lib/server/og-worker.test.ts apps/auth-hasher-worker/src/fetch-handler.test.ts apps/auth-hasher-worker/src/kernel-node.test.ts apps/worker-edge-guard/src/policy.test.ts apps/worker-post-events/src/consumer.test.ts apps/worker-og/src/options.test.ts
 bun run smoke:web:cf:services
 cargo check --manifest-path apps/auth-hasher-worker/Cargo.toml --target wasm32-unknown-unknown
 ```
@@ -177,5 +186,6 @@ Template hygiene rules:
 - [`packages/auth-hasher/README.md`](./packages/auth-hasher/README.md)
 - [`apps/worker-edge-guard/README.md`](./apps/worker-edge-guard/README.md)
 - [`apps/worker-post-events/README.md`](./apps/worker-post-events/README.md)
+- [`apps/worker-og/README.md`](./apps/worker-og/README.md)
 - [`packages/shared/README.md`](./packages/shared/README.md)
 - [`packages/db/README.md`](./packages/db/README.md)

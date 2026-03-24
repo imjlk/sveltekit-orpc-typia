@@ -11,9 +11,11 @@ const port = Number(process.env.PORT ?? 5273);
 const edgeGuardPort = Number(process.env.EDGE_GUARD_PORT ?? 8888);
 const postEventsPort = Number(process.env.POST_EVENTS_PORT ?? 8889);
 const authHasherPort = Number(process.env.AUTH_HASHER_PORT ?? 8890);
+const ogWorkerPort = Number(process.env.OG_WORKER_PORT ?? 8891);
 const edgeGuardInspectorPort = Number(process.env.EDGE_GUARD_INSPECTOR_PORT ?? 9330);
 const postEventsInspectorPort = Number(process.env.POST_EVENTS_INSPECTOR_PORT ?? 9331);
 const authHasherInspectorPort = Number(process.env.AUTH_HASHER_INSPECTOR_PORT ?? 9333);
+const ogWorkerInspectorPort = Number(process.env.OG_WORKER_INSPECTOR_PORT ?? 9334);
 const pagesInspectorPort = Number(process.env.PAGES_INSPECTOR_PORT ?? 9332);
 
 const webCwd = resolve(root, 'apps/web');
@@ -24,8 +26,10 @@ const pagesConfigDir = mkdtempSync(resolve(tmpdir(), 'cloudflare-first-starter.p
 const edgeGuardWorkerCwd = resolve(root, 'apps/worker-edge-guard');
 const postEventsWorkerCwd = resolve(root, 'apps/worker-post-events');
 const authHasherWorkerCwd = resolve(root, 'apps/auth-hasher-worker');
+const ogWorkerCwd = resolve(root, 'apps/worker-og');
 const edgeGuardWorkerName = 'cloudflare-first-starter-worker-edge-guard';
 const authHasherWorkerName = 'cloudflare-first-starter-auth-hasher';
+const ogWorkerName = 'cloudflare-first-starter-worker-og';
 const defaultBetterAuthSecret = process.env.BETTER_AUTH_SECRET ?? 'dev-better-auth-secret-change-me';
 
 const log = (...args: unknown[]) => console.log('[smoke:web:cf:services]', ...args);
@@ -163,6 +167,25 @@ const listActivity = async (base: string, cookie: string): Promise<unknown> => {
 	return response.json();
 };
 
+const assertOgImage = async (base: string) => {
+	const response = await fetch(
+		`${base}/og.png?title=Cloudflare%20First%20Starter&subtitle=Optional%20OG%20worker&theme=ocean&align=center`,
+	);
+
+	if (!response.ok) {
+		throw new Error(`OG route failed (${response.status}): ${await response.text()}`);
+	}
+
+	if (response.headers.get('content-type') !== 'image/png') {
+		throw new Error(`Expected image/png from OG route, got ${response.headers.get('content-type') ?? '(missing)'}`);
+	}
+
+	const cacheHeader = response.headers.get('x-og-cache');
+	if (cacheHeader !== 'hit' && cacheHeader !== 'miss') {
+		throw new Error(`Expected x-og-cache hit|miss, got ${cacheHeader ?? '(missing)'}`);
+	}
+};
+
 try {
 	log('persistDir:', persistDir);
 
@@ -175,9 +198,13 @@ try {
 	await applyLocalD1Migrations({ webCwd, drizzleDir, persistDir, log });
 	const pagesConfig = readFileSync(resolve(webCwd, 'wrangler.services.toml'), 'utf8');
 	const pagesConfigWithAuth = upsertTomlVar(
-		upsertTomlVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
-		'BETTER_AUTH_SECRET',
-		defaultBetterAuthSecret
+		upsertTomlVar(
+			upsertTomlVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
+			'BETTER_AUTH_SECRET',
+			defaultBetterAuthSecret
+		),
+		'OG_WORKER_BASE_URL',
+		`http://127.0.0.1:${ogWorkerPort}`
 	);
 	writeFileSync(resolve(pagesConfigDir, 'wrangler.toml'), pagesConfigWithAuth);
 
@@ -247,6 +274,28 @@ try {
 		authHasherWorkerCwd
 	);
 
+	const ogWorker = spawn(
+		'worker:og',
+		[
+			'bunx',
+			'--silent',
+			'wrangler',
+			'dev',
+			'--local',
+			'--ip',
+			'127.0.0.1',
+			'--port',
+			String(ogWorkerPort),
+			'--persist-to',
+			persistDir,
+			'--inspector-port',
+			String(ogWorkerInspectorPort),
+			'--log-level',
+			'warn'
+		],
+		ogWorkerCwd
+	);
+
 	const pages = spawn(
 		'pages',
 		[
@@ -269,7 +318,9 @@ try {
 			'--service',
 			`EDGE_GUARD=${edgeGuardWorkerName}`,
 			'--service',
-			`AUTH_HASHER=${authHasherWorkerName}`
+			`AUTH_HASHER=${authHasherWorkerName}`,
+			'--service',
+			`OG_WORKER=${ogWorkerName}`
 		],
 		pagesConfigDir
 	);
@@ -280,6 +331,11 @@ try {
 		await waitFor('/ responds', async () => {
 			const response = await fetch(base);
 			return response.ok;
+		});
+
+		await waitFor('/og.png renders', async () => {
+			await assertOgImage(base);
+			return true;
 		});
 
 		const cookie = await signUpAndGetCookie(base);
@@ -304,6 +360,7 @@ try {
 		log('OK');
 	} finally {
 		await kill(pages);
+		await kill(ogWorker);
 		await kill(authHasherWorker);
 		await kill(postEventsWorker);
 		await kill(edgeGuardWorker);

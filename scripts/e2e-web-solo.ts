@@ -11,6 +11,7 @@ type ProcSpec = {
 
 const root = resolve(import.meta.dir, '..');
 const sharedDistEntry = resolve(root, 'packages/shared/dist/index.js');
+const webPort = process.env.E2E_WEB_PORT ?? '4173';
 
 const prefixLine = (name: string, line: string) => {
   const trimmed = line.replace(/\r?\n$/, '');
@@ -115,7 +116,7 @@ try {
 
   const web = spawnPrefixed({
     name: 'web',
-    cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev', '--', '--host', '127.0.0.1', '--port', '4173'],
+    cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev', '--', '--host', '127.0.0.1', '--port', webPort],
     env: {
       ...process.env,
       ORPC_IN_PROCESS: process.env.ORPC_IN_PROCESS ?? '1',
