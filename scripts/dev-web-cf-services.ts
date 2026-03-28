@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import { applyLocalD1Migrations } from './_cf-d1-migrations';
+import { createWranglerCommand } from './_wrangler-cli';
 
 type ProcSpec = {
 	name: string;
@@ -204,10 +205,7 @@ try {
 		spawnPrefixed({
 			name: 'worker:edge-guard',
 			cwd: resolve(root, 'apps/worker-edge-guard'),
-			cmd: [
-				'bunx',
-				'--silent',
-				'wrangler',
+			cmd: createWranglerCommand([
 				'dev',
 				'--local',
 				'--ip',
@@ -220,7 +218,7 @@ try {
 				String(edgeGuardInspectorPort),
 				'--log-level',
 				'warn'
-			]
+			])
 		})
 	);
 
@@ -228,10 +226,7 @@ try {
 		spawnPrefixed({
 			name: 'worker:post-events',
 			cwd: resolve(root, 'apps/worker-post-events'),
-			cmd: [
-				'bunx',
-				'--silent',
-				'wrangler',
+			cmd: createWranglerCommand([
 				'dev',
 				'--local',
 				'--ip',
@@ -244,7 +239,7 @@ try {
 				String(postEventsInspectorPort),
 				'--log-level',
 				'warn'
-			]
+			])
 		})
 	);
 
@@ -252,10 +247,7 @@ try {
 		spawnPrefixed({
 			name: 'worker:auth-hasher',
 			cwd: resolve(root, 'apps/auth-hasher-worker'),
-			cmd: [
-				'bunx',
-				'--silent',
-				'wrangler',
+			cmd: createWranglerCommand([
 				'dev',
 				'--local',
 				'--ip',
@@ -268,7 +260,7 @@ try {
 				String(authHasherInspectorPort),
 				'--log-level',
 				'warn'
-			]
+			])
 		})
 	);
 
@@ -276,10 +268,7 @@ try {
 		spawnPrefixed({
 			name: 'worker:og',
 			cwd: resolve(root, 'apps/worker-og'),
-			cmd: [
-				'bunx',
-				'--silent',
-				'wrangler',
+			cmd: createWranglerCommand([
 				'dev',
 				'--local',
 				'--ip',
@@ -292,7 +281,7 @@ try {
 				String(ogWorkerInspectorPort),
 				'--log-level',
 				'warn'
-			]
+			])
 		})
 	);
 
@@ -300,10 +289,7 @@ try {
 		spawnPrefixed({
 			name: 'pages',
 			cwd: pagesConfigDir,
-			cmd: [
-				'bunx',
-				'--silent',
-				'wrangler',
+			cmd: createWranglerCommand([
 				'pages',
 				'dev',
 				resolve(webCwd, '.svelte-kit/cloudflare'),
@@ -323,7 +309,7 @@ try {
 				`AUTH_HASHER=${authHasherWorkerName}`,
 				'--service',
 				`OG_WORKER=${ogWorkerName}`
-			]
+			])
 		})
 	);
 

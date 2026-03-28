@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createWranglerCommand } from './_wrangler-cli';
 
 type Journal = {
   entries: Array<{
@@ -108,10 +109,7 @@ export const applyLocalD1Migrations = async (options: ApplyLocalD1MigrationsOpti
 
   const d1ExecuteJson = async (args: string[]) =>
     (await runJson(
-      [
-        'bunx',
-        '--silent',
-        'wrangler',
+      createWranglerCommand([
         'd1',
         'execute',
         binding,
@@ -123,7 +121,7 @@ export const applyLocalD1Migrations = async (options: ApplyLocalD1MigrationsOpti
         '--json',
         '--yes',
         ...args,
-      ],
+      ]),
       process.cwd(),
     )) as WranglerD1ExecuteJson;
 
@@ -192,4 +190,3 @@ export const applyLocalD1Migrations = async (options: ApplyLocalD1MigrationsOpti
     }
   }
 };
-

@@ -2,6 +2,7 @@ import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { createWranglerCommand } from './_wrangler-cli';
 
 const root = resolve(import.meta.dir, '..');
 const port = Number(process.env.PORT ?? 5173);
@@ -71,28 +72,26 @@ try {
 
   for (const file of migrationFiles) {
     log('apply migration:', file);
-    await run([
-      'bunx',
-      'wrangler',
-      'd1',
-      'execute',
-      'DB',
-      '--cwd',
-      webCwd,
-      '--local',
-      '--persist-to',
-      persistDir,
-      '--file',
-      file,
-      '--yes',
-    ]);
+    await run(
+      createWranglerCommand([
+        'd1',
+        'execute',
+        'DB',
+        '--cwd',
+        webCwd,
+        '--local',
+        '--persist-to',
+        persistDir,
+        '--file',
+        file,
+        '--yes',
+      ]),
+    );
   }
 
   // Start Pages dev server with a local D1 binding.
   const wrangler = Bun.spawn({
-    cmd: [
-      'bunx',
-      'wrangler',
+    cmd: createWranglerCommand([
       'pages',
       'dev',
       '.svelte-kit/cloudflare',
@@ -106,7 +105,7 @@ try {
       persistDir,
       '--log-level',
       'warn',
-    ],
+    ]),
     cwd: root,
     stdout: 'inherit',
     stderr: 'inherit',

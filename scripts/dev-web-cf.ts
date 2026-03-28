@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 
 import { applyLocalD1Migrations } from './_cf-d1-migrations';
+import { createWranglerCommand } from './_wrangler-cli';
 
 const root = resolve(import.meta.dir, '..');
 const port = Number(process.env.PORT ?? 5173);
@@ -59,10 +60,7 @@ try {
   await applyLocalD1Migrations({ webCwd, drizzleDir, persistDir, log });
 
   child = Bun.spawn({
-    cmd: [
-      'bunx',
-      '--silent',
-      'wrangler',
+    cmd: createWranglerCommand([
       'pages',
       'dev',
       '.svelte-kit/cloudflare',
@@ -76,7 +74,7 @@ try {
       persistDir,
       '--log-level',
       'warn',
-    ],
+    ]),
     cwd: root,
     stdout: 'inherit',
     stderr: 'inherit',

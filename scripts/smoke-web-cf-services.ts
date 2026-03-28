@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import { applyLocalD1Migrations } from './_cf-d1-migrations';
+import { createWranglerCommand } from './_wrangler-cli';
 
 const root = resolve(import.meta.dir, '..');
 
@@ -210,10 +211,7 @@ try {
 
 	const edgeGuardWorker = spawn(
 		'worker:edge-guard',
-		[
-			'bunx',
-			'--silent',
-			'wrangler',
+		createWranglerCommand([
 			'dev',
 			'--local',
 			'--ip',
@@ -226,16 +224,13 @@ try {
 			String(edgeGuardInspectorPort),
 			'--log-level',
 			'warn'
-		],
+		]),
 		edgeGuardWorkerCwd
 	);
 
 	const postEventsWorker = spawn(
 		'worker:post-events',
-		[
-			'bunx',
-			'--silent',
-			'wrangler',
+		createWranglerCommand([
 			'dev',
 			'--local',
 			'--ip',
@@ -248,16 +243,13 @@ try {
 			String(postEventsInspectorPort),
 			'--log-level',
 			'warn'
-		],
+		]),
 		postEventsWorkerCwd
 	);
 
 	const authHasherWorker = spawn(
 		'worker:auth-hasher',
-		[
-			'bunx',
-			'--silent',
-			'wrangler',
+		createWranglerCommand([
 			'dev',
 			'--local',
 			'--ip',
@@ -270,16 +262,13 @@ try {
 			String(authHasherInspectorPort),
 			'--log-level',
 			'warn'
-		],
+		]),
 		authHasherWorkerCwd
 	);
 
 	const ogWorker = spawn(
 		'worker:og',
-		[
-			'bunx',
-			'--silent',
-			'wrangler',
+		createWranglerCommand([
 			'dev',
 			'--local',
 			'--ip',
@@ -292,16 +281,13 @@ try {
 			String(ogWorkerInspectorPort),
 			'--log-level',
 			'warn'
-		],
+		]),
 		ogWorkerCwd
 	);
 
 	const pages = spawn(
 		'pages',
-		[
-			'bunx',
-			'--silent',
-			'wrangler',
+		createWranglerCommand([
 			'pages',
 			'dev',
 			resolve(webCwd, '.svelte-kit/cloudflare'),
@@ -321,7 +307,7 @@ try {
 			`AUTH_HASHER=${authHasherWorkerName}`,
 			'--service',
 			`OG_WORKER=${ogWorkerName}`
-		],
+		]),
 		pagesConfigDir
 	);
 
