@@ -15,9 +15,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@orpc/contract": "^1.13.5",
-    "@orpc/openapi": "^1.13.5",
-    "@orpc/server": "^1.13.5",
+    "@orpc/contract": "^1.13.9",
+    "@orpc/openapi": "^1.13.9",
+    "@orpc/server": "^1.13.9",
     "@repo/db": "workspace:*",
     "@repo/shared": "workspace:*",
     "drizzle-orm": "^0.45.1",
