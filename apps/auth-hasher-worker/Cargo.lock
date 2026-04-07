@@ -16,7 +16,7 @@ dependencies = [
 
 [[package]]
 name = "auth-hasher-hash-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "argon2",
  "hex",
@@ -27,7 +27,7 @@ dependencies = [
 
 [[package]]
 name = "auth-hasher-rust-wasm-kernel"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "auth-hasher-hash-core",
 ]

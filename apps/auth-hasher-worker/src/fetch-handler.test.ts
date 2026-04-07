@@ -10,7 +10,7 @@ describe('auth hasher fetch handler', () => {
     expect(json).toEqual(
       expect.objectContaining({
         algorithm: 'argon2id',
-        version: '0.1.0',
+        version: '0.2.0',
         artifactSourceChecksum: expect.any(String),
         preset: 'standard-2026q1',
         argon2id: {

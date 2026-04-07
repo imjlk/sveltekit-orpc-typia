@@ -78,7 +78,7 @@ describe('auth password rehash', () => {
 								new Response(
 									JSON.stringify({
 										algorithm: 'argon2id',
-										version: '0.1.0',
+										version: '0.2.0',
 										artifactSourceChecksum: 'checksum',
 										preset: 'standard-2026q1',
 										argon2id: {
@@ -179,7 +179,7 @@ describe('auth password rehash', () => {
 								new Response(
 									JSON.stringify({
 										algorithm: 'argon2id',
-										version: '0.1.0',
+										version: '0.2.0',
 										artifactSourceChecksum: 'checksum',
 										preset: 'standard-2026q1',
 										argon2id: {
