@@ -14,9 +14,7 @@ const config = {
 			'@repo/db': path.resolve(projectDir, '../../packages/db/src/index.ts'),
 			'@repo/db/*': path.resolve(projectDir, '../../packages/db/src/*'),
 			'@repo/gateway': path.resolve(projectDir, '../../packages/gateway/src/index.ts'),
-			'@repo/gateway/*': path.resolve(projectDir, '../../packages/gateway/src/*'),
-			'@repo/shared': path.resolve(projectDir, '../../packages/shared/src/index.ts'),
-			'@repo/shared/*': path.resolve(projectDir, '../../packages/shared/src/*')
+			'@repo/gateway/*': path.resolve(projectDir, '../../packages/gateway/src/*')
 		}
 	}
 };

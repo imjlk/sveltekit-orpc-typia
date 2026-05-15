@@ -10,6 +10,9 @@ const port = Number(process.env.PORT ?? 5173);
 const persistDir = mkdtempSync(resolve(tmpdir(), 'cloudflare-first-starter.cf-state.'));
 const drizzleDir = resolve(root, 'packages/db/drizzle');
 const webCwd = resolve(root, 'apps/web');
+const betterAuthUrl = process.env.BETTER_AUTH_URL ?? `http://127.0.0.1:${port}`;
+const defaultBetterAuthSecret =
+  process.env.BETTER_AUTH_SECRET ?? 'dev-better-auth-secret-change-me-32-bytes';
 
 const log = (...args: unknown[]) => console.log('[smoke:web:cf]', ...args);
 
@@ -31,6 +34,9 @@ const waitForRpc = async () => {
   const url = `http://127.0.0.1:${port}/rpc/post/list`;
   const deadline = Date.now() + 60_000;
 
+  const isRpcEnvelope = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && ('json' in value || 'error' in value);
+
   while (Date.now() < deadline) {
     try {
       const res = await fetch(url, {
@@ -38,12 +44,8 @@ const waitForRpc = async () => {
         headers: { 'content-type': 'application/json' },
         body: '{}',
       });
-      if (!res.ok) {
-        await sleep(200);
-        continue;
-      }
-      const json = await res.json();
-      if (json && typeof json === 'object' && 'json' in json) return;
+      const json = await res.json().catch(() => null);
+      if ((res.ok || res.status === 401) && isRpcEnvelope(json)) return;
     } catch {
       // ignore
     }
@@ -105,6 +107,10 @@ try {
       persistDir,
       '--log-level',
       'warn',
+      '--binding',
+      `BETTER_AUTH_SECRET=${defaultBetterAuthSecret}`,
+      '--binding',
+      `BETTER_AUTH_URL=${betterAuthUrl}`,
     ]),
     cwd: root,
     stdout: 'inherit',
