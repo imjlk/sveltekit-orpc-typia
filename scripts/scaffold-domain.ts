@@ -322,7 +322,11 @@ export const ${vars.tableVar} = sqliteTable(
   "${vars.table}",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql\`(unixepoch())\`),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
       .notNull()
       .default(sql\`(unixepoch())\`),
   },
@@ -391,15 +395,21 @@ const scaffoldSharedModule = (
   const contractPath = resolve(dir, 'contract.ts');
   const errorsPath = resolve(dir, 'errors.ts');
 
-  const typesText = `import type { SerializeForTransport } from '../../transport/serialize';
+  const typesText = `import type { tags } from 'typia';
+import type { SerializeForTransport } from '../../transport/serialize';
 
 type ${vars.Name}Row = import('@repo/db/schema-types').${vars.Name}Row;
 
 export type ${vars.Name} = SerializeForTransport<${vars.Name}Row>;
 
-export type Create${vars.Name}Input = Record<never, never>;
+export type Create${vars.Name}Input = {
+  name: ${vars.Name}Row['name'] & tags.MinLength<1>;
+};
 export type Get${vars.Name}Input = { id: ${vars.Name}Row['id'] };
-export type Update${vars.Name}Input = { id: ${vars.Name}Row['id'] };
+export type Update${vars.Name}Input = {
+  id: ${vars.Name}Row['id'];
+  name?: ${vars.Name}Row['name'] & tags.MinLength<1>;
+};
 export type Delete${vars.Name}Input = { id: ${vars.Name}Row['id'] };
 
 export type { SerializeForTransport };
@@ -601,16 +611,23 @@ const scaffoldApiModule = (
 import { ORPCError, implement } from '@orpc/server';
 import { ${vars.name}Contract } from '@repo/shared';
 import { eq } from 'drizzle-orm';
-import { internalError, notFound } from '../../lib/errors';
+import { badRequest, internalError, notFound } from '../../lib/errors';
+import { trimRequired } from '../../lib/input';
 import type { DbClient } from '../../types';
+
+type ${vars.Name}Insert = typeof ${vars.tableVar}.$inferInsert;
 
 const ${vars.name} = implement(${vars.name}Contract);
 
 export const create${vars.Name}Router = (db: DbClient) =>
   ${vars.name}.router({
-    create: ${vars.name}.create.handler(async () => {
+    create: ${vars.name}.create.handler(async ({ input }) => {
+      const insertInput: Pick<${vars.Name}Insert, 'name'> = {
+        name: trimRequired('Name', input.name),
+      };
+
       try {
-        const createdRows = await db.insert(${vars.tableVar}).values({}).returning();
+        const createdRows = await db.insert(${vars.tableVar}).values(insertInput).returning();
         const row = createdRows[0];
 
         if (!row) {
@@ -649,8 +666,34 @@ export const create${vars.Name}Router = (db: DbClient) =>
         throw notFound('${vars.name}', input.id, '${vars.Name} not found');
       }
 
-      // TODO: Apply update fields to the DB row.
-      return existing;
+      const patch: Partial<Pick<${vars.Name}Insert, 'name' | 'updatedAt'>> = {};
+
+      if (input.name !== undefined) {
+        patch.name = trimRequired('Name', input.name);
+      }
+
+      if (Object.keys(patch).length === 0) {
+        throw badRequest('No update fields provided', { reason: 'No update fields provided' });
+      }
+
+      patch.updatedAt = new Date();
+
+      try {
+        const updatedRows = await db.update(${vars.tableVar}).set(patch).where(eq(${vars.tableVar}.id, input.id)).returning();
+        const row = updatedRows[0];
+
+        if (!row) {
+          throw notFound('${vars.name}', input.id, '${vars.Name} not found');
+        }
+
+        return row;
+      } catch (error) {
+        if (error instanceof ORPCError) {
+          throw error;
+        }
+
+        throw internalError('Failed to update ${vars.name}', error);
+      }
     }),
     delete: ${vars.name}.delete.handler(async ({ input }) => {
       const deletedRows = await db.delete(${vars.tableVar}).where(eq(${vars.tableVar}.id, input.id)).returning();

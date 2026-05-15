@@ -137,6 +137,9 @@
         "drizzle-orm": "^0.45.2",
         "json-schema-typed": "^8.0.2",
       },
+      "devDependencies": {
+        "@orpc/client": "^1.13.13",
+      },
       "peerDependencies": {
         "typescript": "^5",
       },

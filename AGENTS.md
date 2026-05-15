@@ -71,6 +71,8 @@ Keep that positioning honest in code and docs.
 - Build: `bun run build`
 - Generate checked-in Cloudflare binding types: `bun run types:cf`
 - Type and app checks: `bun run check`
+- Unit tests: `bun run test:unit`
+- API module tests: `bun run --cwd packages/api test`
 - Gateway unit test: `bun test packages/gateway/src/resolver.test.ts`
 - Auth bridge unit test: `bun test packages/shared/test/auth-bridge.test.ts`
 - Web auth helper tests:
@@ -85,6 +87,10 @@ Keep that positioning honest in code and docs.
   - `bun test apps/auth-hasher-worker/src/kernel-node.test.ts`
 - Auth hasher Rust kernel check:
   - `cargo check --manifest-path apps/auth-hasher-worker/Cargo.toml --target wasm32-unknown-unknown`
+- Advanced Worker tests:
+  - `bun run --cwd apps/worker-edge-guard test`
+  - `bun run --cwd apps/worker-post-events test`
+  - `bun run --cwd apps/worker-og test`
 - Web e2e: `bun run test:e2e`
 - Generate OpenAPI: `bun run gen:openapi`
 - Verify checked-in OpenAPI output: `bun run verify:openapi`

@@ -5,6 +5,9 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "test": "bun test src"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -13,6 +16,9 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "devDependencies": {
+    "@orpc/client": "^1.13.13"
   },
   "dependencies": {
     "@orpc/contract": "^1.13.13",

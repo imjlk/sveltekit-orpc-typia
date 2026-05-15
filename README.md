@@ -161,9 +161,9 @@ Fresh clone release bar:
 ```bash
 bun install --frozen-lockfile
 bun run check
+bun run test:unit
 bun run test:e2e
 bun run --cwd apps/web test:e2e:solo
-bun test packages/auth-hasher-contracts/test/index.test.ts packages/auth-hasher-client/test/index.test.ts packages/api/src/lib/capabilities.test.ts packages/gateway/src/resolver.test.ts packages/shared/test/auth-bridge.test.ts packages/shared/test/og-template.test.ts apps/web/src/lib/server/auth-social.test.ts apps/web/src/lib/server/auth-password-hasher.test.ts apps/web/src/lib/server/auth-password-rehash.test.ts apps/web/src/lib/server/og-worker.test.ts apps/auth-hasher-worker/src/fetch-handler.test.ts apps/auth-hasher-worker/src/kernel-node.test.ts apps/worker-edge-guard/src/policy.test.ts apps/worker-post-events/src/consumer.test.ts apps/worker-og/src/options.test.ts
 bun run smoke:web:cf:services
 cargo check --manifest-path apps/auth-hasher-worker/Cargo.toml --target wasm32-unknown-unknown
 ```

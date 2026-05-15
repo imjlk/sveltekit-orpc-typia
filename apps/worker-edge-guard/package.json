@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "test": "bun test src/policy.test.ts",
     "types:cf": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false",
     "types:cf:check": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false --check"
   },
