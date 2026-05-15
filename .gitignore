@@ -28,7 +28,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .eslintcache
 .cache
 .sisyphus/
+.playwright-mcp/
 *.tsbuildinfo
+
+# local screenshots
+/on-invite-web.png
 
 # IntelliJ based IDEs
 .idea
