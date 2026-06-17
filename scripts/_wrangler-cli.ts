@@ -3,7 +3,10 @@ import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
-const wranglerCli = resolve(root, 'node_modules/wrangler/bin/wrangler.js');
+
+interface WranglerCommandOptions {
+	cwd?: string;
+}
 
 const parseVersion = (value: string): number[] =>
 	value
@@ -52,7 +55,33 @@ const resolveNodeBinary = (): string | null => {
 	return null;
 };
 
-export const createWranglerCommand = (args: string[]): string[] => {
+const resolveWranglerCwd = (args: string[], cwd?: string): string | null => {
+	if (cwd) return cwd;
+
+	const cwdFlagIndex = args.indexOf('--cwd');
+	const cwdArg = cwdFlagIndex >= 0 ? args[cwdFlagIndex + 1] : undefined;
+	return cwdArg && !cwdArg.startsWith('-') ? cwdArg : null;
+};
+
+const resolveWranglerCli = (args: string[], options: WranglerCommandOptions): string => {
+	const commandCwd = resolveWranglerCwd(args, options.cwd);
+	const candidates = [commandCwd, root]
+		.filter((candidate): candidate is string => Boolean(candidate))
+		.map((candidate) => resolve(candidate, 'node_modules/wrangler/bin/wrangler.js'));
+
+	for (const candidate of candidates) {
+		if (existsSync(candidate)) return candidate;
+	}
+
+	throw new Error(
+		`Wrangler CLI not found. Run bun install first. Checked: ${candidates.join(', ')}.`
+	);
+};
+
+export const createWranglerCommand = (
+	args: string[],
+	options: WranglerCommandOptions = {}
+): string[] => {
 	const nodeBin = resolveNodeBinary();
 	if (!nodeBin) {
 		throw new Error(
@@ -60,9 +89,5 @@ export const createWranglerCommand = (args: string[]): string[] => {
 		);
 	}
 
-	if (!existsSync(wranglerCli)) {
-		throw new Error(`Wrangler CLI not found at ${wranglerCli}. Run bun install first.`);
-	}
-
-	return [nodeBin, wranglerCli, ...args];
+	return [nodeBin, resolveWranglerCli(args, options), ...args];
 };

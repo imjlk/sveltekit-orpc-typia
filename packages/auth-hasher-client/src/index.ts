@@ -47,7 +47,10 @@ export const isLocalAuthHasherProxyError = (error: unknown): boolean => {
         ? String((error as { message?: unknown }).message ?? '')
         : String(error ?? '');
 
-  return /couldn't find a local dev session/i.test(message);
+  return (
+    /couldn't find a local dev session/i.test(message) ||
+    /Worker ".+" not found\. Make sure it is running locally\./i.test(message)
+  );
 };
 
 const hasMethod = <T extends string>(value: unknown, method: T): value is Record<T, unknown> => {

@@ -240,7 +240,7 @@ try {
 			String(edgeGuardInspectorPort),
 			'--log-level',
 			'warn'
-		]),
+		], { cwd: edgeGuardWorkerCwd }),
 		edgeGuardWorkerCwd
 	);
 
@@ -259,7 +259,7 @@ try {
 			String(postEventsInspectorPort),
 			'--log-level',
 			'warn'
-		]),
+		], { cwd: postEventsWorkerCwd }),
 		postEventsWorkerCwd
 	);
 
@@ -278,7 +278,7 @@ try {
 			String(authHasherInspectorPort),
 			'--log-level',
 			'warn'
-		]),
+		], { cwd: authHasherWorkerCwd }),
 		authHasherWorkerCwd
 	);
 
@@ -297,7 +297,7 @@ try {
 			String(ogWorkerInspectorPort),
 			'--log-level',
 			'warn'
-		]),
+		], { cwd: ogWorkerCwd }),
 		ogWorkerCwd
 	);
 
@@ -323,7 +323,7 @@ try {
 			`AUTH_HASHER=${authHasherWorkerName}`,
 			'--service',
 			`OG_WORKER=${ogWorkerName}`
-		]),
+		], { cwd: webCwd }),
 		pagesConfigDir
 	);
 

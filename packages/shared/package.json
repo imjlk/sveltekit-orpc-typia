@@ -48,8 +48,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@orpc/contract": "^1.13.13",
-    "@orpc/server": "^1.13.13",
+    "@orpc/contract": "^1.14.6",
+    "@orpc/server": "^1.14.6",
     "@repo/db": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
     "typia": "13.0.0-dev.20260612.1"

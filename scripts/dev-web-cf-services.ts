@@ -234,7 +234,7 @@ try {
 				String(edgeGuardInspectorPort),
 				'--log-level',
 				'warn'
-			])
+			], { cwd: resolve(root, 'apps/worker-edge-guard') })
 		})
 	);
 
@@ -255,7 +255,7 @@ try {
 				String(postEventsInspectorPort),
 				'--log-level',
 				'warn'
-			])
+			], { cwd: resolve(root, 'apps/worker-post-events') })
 		})
 	);
 
@@ -276,7 +276,7 @@ try {
 				String(authHasherInspectorPort),
 				'--log-level',
 				'warn'
-			])
+			], { cwd: resolve(root, 'apps/auth-hasher-worker') })
 		})
 	);
 
@@ -297,7 +297,7 @@ try {
 				String(ogWorkerInspectorPort),
 				'--log-level',
 				'warn'
-			])
+			], { cwd: resolve(root, 'apps/worker-og') })
 		})
 	);
 
@@ -325,7 +325,7 @@ try {
 				`AUTH_HASHER=${authHasherWorkerName}`,
 				'--service',
 				`OG_WORKER=${ogWorkerName}`
-			])
+			], { cwd: webCwd })
 		})
 	);
 
