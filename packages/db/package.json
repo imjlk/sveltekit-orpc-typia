@@ -18,6 +18,10 @@
       "types": "./src/d1.ts",
       "import": "./src/d1.ts"
     },
+    "./postgres": {
+      "types": "./src/postgres.ts",
+      "import": "./src/postgres.ts"
+    },
     "./migrations": {
       "types": "./src/migrations.ts",
       "import": "./src/migrations.ts"
@@ -26,9 +30,17 @@
       "types": "./src/schema.ts",
       "import": "./src/schema.ts"
     },
+    "./pg-schema": {
+      "types": "./src/pg-schema.ts",
+      "import": "./src/pg-schema.ts"
+    },
     "./schema-types": {
       "types": "./src/schema-types.ts",
       "import": "./src/schema-types.ts"
+    },
+    "./pg-schema-types": {
+      "types": "./src/pg-schema-types.ts",
+      "import": "./src/pg-schema-types.ts"
     }
   },
   "scripts": {
@@ -37,16 +49,19 @@
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:migrate:d1": "drizzle-kit migrate --config drizzle.d1.config.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "drizzle-kit": "^0.31.10"
+    "db:migrate:d1": "drizzle-kit migrate --config drizzle.d1.config.ts",
+    "db:generate:pg": "drizzle-kit generate --config drizzle.pg.config.ts",
+    "db:migrate:pg": "drizzle-kit migrate --config drizzle.pg.config.ts"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.10"
   }
 }

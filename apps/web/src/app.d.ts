@@ -15,10 +15,6 @@ type EdgeGuardBinding = {
 	getMode(): Promise<EdgeGuardMode>;
 };
 
-type HyperdriveBinding = {
-	connectionString: string;
-};
-
 type BetterAuthLike = {
 	api: {
 		getSession(input: { headers: Headers }): Promise<unknown>;
@@ -49,7 +45,7 @@ type PlatformEnv = Partial<Omit<Cloudflare.Env, 'AUTH_HASHER'>> & {
 	KV?: KVNamespace;
 	R2?: R2Bucket;
 	APP_STATE?: DurableObjectNamespace;
-	HYPERDRIVE?: HyperdriveBinding;
+	HYPERDRIVE?: Hyperdrive;
 	OG_WORKER_BASE_URL?: string;
 	[key: string]: unknown;
 };

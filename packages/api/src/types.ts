@@ -1,9 +1,22 @@
-import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
-import type * as schema from '@repo/db/schema';
+import type * as pgSchema from '@repo/db/pg-schema';
+import type * as sqliteSchema from '@repo/db/schema';
 import type { PostEventMessage } from '@repo/shared';
 import type { EdgeGuardBinding, QueueLike } from './lib/capabilities';
 
-export type DbClient = BaseSQLiteDatabase<'sync' | 'async', unknown, typeof schema>;
+export type DbSchema = typeof sqliteSchema | typeof pgSchema;
+
+export type SelectQueryLike<T> = {
+  all: () => T | Promise<T>;
+};
+
+export type DbClient = any;
+
+export type DbRuntime = {
+  db: DbClient;
+  schema: DbSchema;
+};
+
+export type DbRuntimeInput = DbClient | DbRuntime;
 
 export type AuthenticatedUser = {
   userId: string;

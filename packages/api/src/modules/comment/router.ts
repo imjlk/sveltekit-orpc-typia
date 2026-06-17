@@ -1,16 +1,21 @@
-import { comments } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { ORPCError, implement } from '@orpc/server';
+import type * as sqliteSchema from '@repo/db/schema';
 import { commentContract } from '@repo/shared';
 import { badRequest, internalError } from '../../lib/errors';
 import { normalizeCreateCommentInput } from './normalize';
-import type { AppContext, DbClient } from '../../types';
+import { toDbRuntime } from '../../lib/db-runtime';
+import type { AppContext, DbRuntimeInput } from '../../types';
 
-type CommentInsert = typeof comments.$inferInsert;
+type CommentInsert = typeof sqliteSchema.comments.$inferInsert;
 
 const comment = implement(commentContract).$context<AppContext>();
 
-export const createCommentRouter = (db: DbClient) =>
-  comment.router({
+export const createCommentRouter = (input: DbRuntimeInput) => {
+  const { db, schema } = toDbRuntime(input);
+  const { comments } = schema as typeof sqliteSchema;
+
+  return comment.router({
     create: comment.create.handler(async ({ input }) => {
       const normalized = normalizeCreateCommentInput(input);
       const insertInput: Pick<CommentInsert, 'postId' | 'content'> = {
@@ -21,7 +26,7 @@ export const createCommentRouter = (db: DbClient) =>
       // Optional: validate post exists early to return a nicer error.
       const postExists = await db.query.posts.findFirst({
         columns: { id: true },
-        where: (postsTable, { eq }) => eq(postsTable.id, insertInput.postId),
+        where: (postsTable: any) => eq(postsTable.id, insertInput.postId),
       });
 
       if (!postExists) {
@@ -47,7 +52,8 @@ export const createCommentRouter = (db: DbClient) =>
     }),
     listByPost: comment.listByPost.handler(async ({ input }) => {
       return db.query.comments.findMany({
-        where: (commentsTable, { eq }) => eq(commentsTable.postId, input.postId),
+        where: (commentsTable: any) => eq(commentsTable.postId, input.postId),
       });
     }),
   });
+};

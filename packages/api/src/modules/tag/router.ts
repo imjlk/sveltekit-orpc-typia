@@ -1,16 +1,22 @@
-import { tags } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { ORPCError, implement } from '@orpc/server';
+import type * as sqliteSchema from '@repo/db/schema';
 import { tagContract } from '@repo/shared';
 import { internalError } from '../../lib/errors';
 import { trimRequired } from '../../lib/input';
-import type { AppContext, DbClient } from '../../types';
+import { resolveSelect, toDbRuntime } from '../../lib/db-runtime';
+import type { AppContext, DbRuntimeInput } from '../../types';
 
-type TagInsert = typeof tags.$inferInsert;
+type TagRow = typeof sqliteSchema.tags.$inferSelect;
+type TagInsert = typeof sqliteSchema.tags.$inferInsert;
 
 const tag = implement(tagContract).$context<AppContext>();
 
-export const createTagRouter = (db: DbClient) =>
-  tag.router({
+export const createTagRouter = (input: DbRuntimeInput) => {
+  const { db, schema } = toDbRuntime(input);
+  const { tags } = schema as typeof sqliteSchema;
+
+  return tag.router({
     create: tag.create.handler(async ({ input }) => {
       const trimmedInput: Pick<TagInsert, 'name'> = {
         name: trimRequired('Name', input.name),
@@ -29,7 +35,7 @@ export const createTagRouter = (db: DbClient) =>
         }
 
         const existing = await db.query.tags.findFirst({
-          where: (tagsTable, { eq }) => eq(tagsTable.name, trimmedInput.name),
+          where: (tagsTable: any) => eq(tagsTable.name, trimmedInput.name),
         });
 
         if (!existing) {
@@ -46,6 +52,7 @@ export const createTagRouter = (db: DbClient) =>
       }
     }),
     list: tag.list.handler(async () => {
-      return db.select().from(tags).all();
+      return resolveSelect<TagRow[]>(db.select().from(tags));
     }),
   });
+};

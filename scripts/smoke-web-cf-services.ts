@@ -35,24 +35,36 @@ const defaultBetterAuthSecret = process.env.BETTER_AUTH_SECRET ?? 'dev-better-au
 
 const log = (...args: unknown[]) => console.log('[smoke:web:cf:services]', ...args);
 
-const upsertTomlVar = (tomlText: string, key: string, value: string): string => {
-	const line = `${key} = "${value}"`;
-	const re = new RegExp(`^\\s*${key}\\s*=\\s*"[^"]*"\\s*$`, 'm');
-	if (re.test(tomlText)) {
-		return tomlText.replace(re, line);
+const upsertJsoncVar = (jsoncText: string, key: string, value: string): string => {
+	const line = `\t\t"${key}": ${JSON.stringify(value)},`;
+	const existing = new RegExp(`^(\\s*)"${key}"\\s*:\\s*"[^"]*"(,?)\\s*$`, 'm');
+	if (existing.test(jsoncText)) {
+		return jsoncText.replace(existing, (_match, indent: string, comma: string) => {
+			const trailingComma = comma || ',';
+			return `${indent}"${key}": ${JSON.stringify(value)}${trailingComma}`;
+		});
 	}
 
-	const varsIndex = tomlText.indexOf('[vars]');
+	const varsIndex = jsoncText.indexOf('"vars"');
 	if (varsIndex === -1) {
-		return `${tomlText.trimEnd()}\n\n[vars]\n${line}\n`;
+		const insertAt = jsoncText.lastIndexOf('}');
+		if (insertAt === -1) {
+			return jsoncText;
+		}
+		return `${jsoncText.slice(0, insertAt).trimEnd()},\n\t"vars": {\n${line}\n\t}\n${jsoncText.slice(insertAt)}`;
 	}
 
-	const insertAt = tomlText.indexOf('\n', varsIndex);
+	const openBraceIndex = jsoncText.indexOf('{', varsIndex);
+	if (openBraceIndex === -1) {
+		return jsoncText;
+	}
+
+	const insertAt = jsoncText.indexOf('\n', openBraceIndex);
 	if (insertAt === -1) {
-		return `${tomlText}\n${line}\n`;
+		return `${jsoncText.slice(0, openBraceIndex + 1)}\n${line}\n${jsoncText.slice(openBraceIndex + 1)}`;
 	}
 
-	return `${tomlText.slice(0, insertAt + 1)}${line}\n${tomlText.slice(insertAt + 1)}`;
+	return `${jsoncText.slice(0, insertAt + 1)}${line}\n${jsoncText.slice(insertAt + 1)}`;
 };
 
 const waitFor = async (label: string, fn: () => Promise<boolean>) => {
@@ -197,17 +209,21 @@ try {
 	}
 
 	await applyLocalD1Migrations({ webCwd, drizzleDir, persistDir, log });
-	const pagesConfig = readFileSync(resolve(webCwd, 'wrangler.services.toml'), 'utf8');
-	const pagesConfigWithAuth = upsertTomlVar(
-		upsertTomlVar(
-			upsertTomlVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
+	const pagesConfig = readFileSync(resolve(webCwd, 'wrangler.jsonc'), 'utf8');
+	const pagesConfigWithAuth = upsertJsoncVar(
+		upsertJsoncVar(
+			upsertJsoncVar(
+				upsertJsoncVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
+				'ORPC_DB_DRIVER',
+				'd1'
+			),
 			'BETTER_AUTH_SECRET',
 			defaultBetterAuthSecret
 		),
 		'OG_WORKER_BASE_URL',
 		`http://127.0.0.1:${ogWorkerPort}`
 	);
-	writeFileSync(resolve(pagesConfigDir, 'wrangler.toml'), pagesConfigWithAuth);
+	writeFileSync(resolve(pagesConfigDir, 'wrangler.jsonc'), pagesConfigWithAuth);
 
 	const edgeGuardWorker = spawn(
 		'worker:edge-guard',

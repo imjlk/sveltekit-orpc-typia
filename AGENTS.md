@@ -18,7 +18,7 @@ Default shipped stack:
 
 - SvelteKit on Cloudflare Pages
 - oRPC + typia for contract-first APIs
-- Drizzle + D1 as the default database path
+- Drizzle + D1 as the default database path, with optional Hyperdrive/Postgres support for the Pages API gateway
 - Better Auth under `/auth/*`
 - optional Cloudflare service-binding splits
 - optional OG image rendering via `OG_WORKER`
@@ -32,6 +32,7 @@ Keep that positioning honest in code and docs.
    - Drizzle schema, runtime adapters, and checked-in SQL migrations.
    - `@repo/db/bun` is for Bun or local SQLite.
    - `@repo/db/d1` is for Cloudflare D1.
+   - `@repo/db/postgres` is for Hyperdrive/Postgres.
 2. `packages/shared`
    - SSOT for contracts, runtime schemas, transport helpers, shared error shapes, and auth bridge helpers.
 3. `packages/auth-hasher-contracts`
@@ -66,7 +67,7 @@ Keep that positioning honest in code and docs.
 - Full local dev: `bun run dev`
 - OG worker only: `bun run dev:og-worker`
 - Web only, in-process RPC: `bun run dev:web:solo`
-- Web on local Cloudflare Pages + D1: `bun run dev:web:cf`
+- Web on local Cloudflare Pages with configured bindings: `bun run dev:web:cf`
 - Web on local Pages + split Worker services: `bun run dev:web:cf:services`
 - Build: `bun run build`
 - Generate checked-in Cloudflare binding types: `bun run types:cf`
@@ -102,6 +103,7 @@ When adding or changing a domain, update the SSOT layers in order:
 1. Database
    - edit `packages/db/src/schema.ts`
    - generate migration SQL with `bun run --cwd packages/db db:generate`
+   - if the domain participates in the Hyperdrive/Postgres path, mirror the table shape in `packages/db/src/pg-schema.ts` and generate SQL with `bun run --cwd packages/db db:generate:pg`
 2. Shared contract and types
    - update `packages/shared/src/modules/<domain>/types.ts`
    - update `packages/shared/src/modules/<domain>/schema.ts`
@@ -138,6 +140,7 @@ When contracts change, regenerate the checked-in specs:
 - In-process mode is controlled by `ORPC_IN_PROCESS=1`.
 - Bun or local runtime uses SQLite through `@repo/db/bun`.
 - Cloudflare runtime uses D1 through `@repo/db/d1`.
+- Pages in-process API can use Hyperdrive/Postgres when `ORPC_DB_DRIVER=hyperdrive` and `HYPERDRIVE` is bound. The current `apps/web/wrangler.jsonc` enables that local path.
 - The gateway should pass authenticated user state through the signed auth bridge headers, not by leaking Better Auth session internals into downstream apps.
 - `/og.png` lives in `apps/web` and should proxy to `OG_WORKER` or `OG_WORKER_BASE_URL` when that optional capability is enabled.
 
@@ -175,4 +178,4 @@ When contracts change, regenerate the checked-in specs:
 ## Current Caveats
 
 - Most coverage is still around gateway resolution, auth helpers, and the main web flow. Backend module-level tests remain relatively light.
-- The starter is optimized around D1 first. KV, DO, Hyperdrive, and R2 are typed and documented but not wired into the default runtime path.
+- The starter is still D1-first for auth and the original demo path. The current `apps/web/wrangler.jsonc` opts the in-process API gateway into local Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`; change that var to `d1` for pure D1 parity. KV, DO, and R2 are typed and documented but not wired into the default runtime path.

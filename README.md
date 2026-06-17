@@ -8,7 +8,7 @@ Korean translation: [`README_ko.md`](./README_ko.md)
 
 - `SvelteKit` running on Cloudflare Pages
 - `oRPC` + `typia` as the shared contract and schema layer
-- `Drizzle` + `D1` as the default relational data path
+- `Drizzle` + `D1` as the default relational data path, with an optional Hyperdrive/Postgres API runtime
 - `better-auth` mounted under `/auth/*`
 - an in-process gateway for `/rpc/*` and `/api/*` by default
 - an optional `/og.png` route backed by a dedicated OG Worker
@@ -30,7 +30,7 @@ flowchart LR
     AUTH --> DB["D1 / Drizzle"]
     RPC --> APP["In-process App Router"]
     API --> APP
-    APP --> DB
+    APP --> API_DB["D1 or Hyperdrive Postgres / Drizzle"]
     W -. optional .-> HASH["AUTH_HASHER Worker"]
     HASH -. service binding .-> W
 ```
@@ -67,17 +67,17 @@ Choose one local runtime:
 - `bun run dev`
   Vite web app plus Bun API server
 - `bun run dev:web:cf`
-  local Pages + D1 parity
+  local Pages with Wrangler bindings. The checked-in config currently routes in-process `/rpc` and `/api` to Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`, while D1 remains bound for Better Auth. This script applies the local Postgres migration from the configured `localConnectionString`.
 
 ## Deploy To Cloudflare
 
-1. Create a D1 database and copy the returned `database_name` and `database_id` into [apps/web/wrangler.toml](./apps/web/wrangler.toml).
+1. Create a D1 database and copy the returned `database_name` and `database_id` into [apps/web/wrangler.jsonc](./apps/web/wrangler.jsonc).
 
 ```bash
 bunx wrangler d1 create <your-d1-name>
 ```
 
-2. Set `BETTER_AUTH_URL` in [apps/web/wrangler.toml](./apps/web/wrangler.toml) to your deployed Pages origin.
+2. Set `BETTER_AUTH_URL` in [apps/web/wrangler.jsonc](./apps/web/wrangler.jsonc) to your deployed Pages origin.
 3. Store `BETTER_AUTH_SECRET` as a Pages secret instead of a checked-in config var.
 
 ```bash
@@ -93,10 +93,17 @@ bun run --cwd apps/auth-hasher-worker deploy
 5. In your Cloudflare Pages project, configure:
    - optional: `GITHUB_CLIENT_ID`
    - optional: `GITHUB_CLIENT_SECRET`
-6. Keep the `AUTH_HASHER` service binding in [apps/web/wrangler.toml](./apps/web/wrangler.toml) pointed at `cloudflare-first-starter-auth-hasher`.
+6. Keep the `AUTH_HASHER` service binding in [apps/web/wrangler.jsonc](./apps/web/wrangler.jsonc) pointed at `cloudflare-first-starter-auth-hasher`.
 7. Deploy the Pages app with your normal Pages workflow.
 
 For local-only secrets and D1 HTTP migration config, copy from [apps/web/.dev.vars.example](./apps/web/.dev.vars.example).
+The checked-in `HYPERDRIVE` binding in [apps/web/wrangler.jsonc](./apps/web/wrangler.jsonc) is configured for local Postgres through `localConnectionString`; replace its `id` value with a real Hyperdrive config id before using it in Cloudflare. When `ORPC_DB_DRIVER=hyperdrive`, the in-process `/rpc` and `/api` gateway uses `@repo/db/postgres` and the Postgres migrations in `packages/db/drizzle-pg/`.
+To initialize that local Postgres schema, run:
+
+```bash
+DATABASE_URL=postgres://root:mysecretpassword@localhost:50101/local bun run --cwd packages/db db:migrate:pg
+```
+
 After changing Wrangler bindings in `apps/web`, `apps/worker-edge-guard`, or `apps/worker-post-events`, regenerate the checked-in binding types with `bun run types:cf`.
 If you also change the optional OG worker bindings, rerun `bun run types:cf` as well.
 
@@ -107,7 +114,7 @@ The default template does not need extra application Workers.
 ```mermaid
 flowchart LR
     W["Pages Gateway"] --> APP["Default App Router"]
-    APP --> DB["D1"]
+    APP --> DB["D1 or Hyperdrive Postgres"]
     APP -. optional service binding .-> EG["EDGE_GUARD Worker"]
     EG --> RL["Workers Rate Limiting binding"]
     EG -. optional adapter .-> DO["RATE_LIMITER_STATE DO"]
@@ -128,6 +135,8 @@ Use extra Workers only when Cloudflare capabilities are the reason:
 Current notes:
 
 - `bun run dev:web:cf:services` is an advanced reference mode only.
+- `apps/web/wrangler.jsonc` is the single Pages config source; service bindings and Hyperdrive live there together.
+- The service-mode script temporarily pins `ORPC_DB_DRIVER=d1` so the legacy capability example keeps sharing the same local D1 state across Pages and Workers.
 - It boots the capability example path: `EDGE_GUARD` + `POST_EVENTS` + `OG_WORKER`.
 - On `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session.
 - On `localhost`, `post_activity` is also projected inline so the advanced example stays visible even when local Queue emulation lags.
@@ -149,7 +158,7 @@ Advanced example bindings:
 
 Advanced example files:
 
-- [`apps/web/wrangler.services.toml`](./apps/web/wrangler.services.toml)
+- [`apps/web/wrangler.jsonc`](./apps/web/wrangler.jsonc)
 - [`apps/worker-edge-guard`](./apps/worker-edge-guard)
 - [`apps/worker-post-events`](./apps/worker-post-events)
 - [`apps/worker-og`](./apps/worker-og)

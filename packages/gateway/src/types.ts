@@ -13,6 +13,10 @@ export type D1DatabaseLike = {
   prepare: (query: string) => unknown;
 };
 
+export type HyperdriveLike = {
+  connectionString: string;
+};
+
 export type Upstream =
   | { kind: 'binding'; binding: ServiceBinding }
   | { kind: 'url'; url: string }

@@ -33,36 +33,48 @@ const pagesConfigDir = mkdtempSync(resolve(tmpdir(), 'cloudflare-first-starter.p
 const log = (...args: unknown[]) => console.log('[dev:web:cf:services]', ...args);
 const defaultBetterAuthSecret = process.env.BETTER_AUTH_SECRET ?? 'dev-better-auth-secret-change-me';
 
-const readTomlString = (tomlText: string, key: string): string | undefined => {
-	const re = new RegExp(`^\\s*${key}\\s*=\\s*\"([^\"]+)\"\\s*$`, 'm');
-	return tomlText.match(re)?.[1];
+const readConfigString = (configText: string, key: string): string | undefined => {
+	const re = new RegExp(`^\\s*"?${key}"?\\s*[:=]\\s*"([^"]+)"\\s*,?\\s*$`, 'm');
+	return configText.match(re)?.[1];
 };
 
-const readWranglerTomlInfo = (filePath: string) => {
+const readWranglerConfigInfo = (filePath: string) => {
 	const text = readFileSync(filePath, 'utf8');
-	const name = readTomlString(text, 'name');
-	const databaseId = readTomlString(text, 'database_id');
+	const name = readConfigString(text, 'name');
+	const databaseId = readConfigString(text, 'database_id');
 	return { name, databaseId };
 };
 
-const upsertTomlVar = (tomlText: string, key: string, value: string): string => {
-	const line = `${key} = "${value}"`;
-	const re = new RegExp(`^\\s*${key}\\s*=\\s*"[^"]*"\\s*$`, 'm');
-	if (re.test(tomlText)) {
-		return tomlText.replace(re, line);
+const upsertJsoncVar = (jsoncText: string, key: string, value: string): string => {
+	const line = `\t\t"${key}": ${JSON.stringify(value)},`;
+	const existing = new RegExp(`^(\\s*)"${key}"\\s*:\\s*"[^"]*"(,?)\\s*$`, 'm');
+	if (existing.test(jsoncText)) {
+		return jsoncText.replace(existing, (_match, indent: string, comma: string) => {
+			const trailingComma = comma || ',';
+			return `${indent}"${key}": ${JSON.stringify(value)}${trailingComma}`;
+		});
 	}
 
-	const varsIndex = tomlText.indexOf('[vars]');
+	const varsIndex = jsoncText.indexOf('"vars"');
 	if (varsIndex === -1) {
-		return `${tomlText.trimEnd()}\n\n[vars]\n${line}\n`;
+		const insertAt = jsoncText.lastIndexOf('}');
+		if (insertAt === -1) {
+			return jsoncText;
+		}
+		return `${jsoncText.slice(0, insertAt).trimEnd()},\n\t"vars": {\n${line}\n\t}\n${jsoncText.slice(insertAt)}`;
 	}
 
-	const insertAt = tomlText.indexOf('\n', varsIndex);
+	const openBraceIndex = jsoncText.indexOf('{', varsIndex);
+	if (openBraceIndex === -1) {
+		return jsoncText;
+	}
+
+	const insertAt = jsoncText.indexOf('\n', openBraceIndex);
 	if (insertAt === -1) {
-		return `${tomlText}\n${line}\n`;
+		return `${jsoncText.slice(0, openBraceIndex + 1)}\n${line}\n${jsoncText.slice(openBraceIndex + 1)}`;
 	}
 
-	return `${tomlText.slice(0, insertAt + 1)}${line}\n${tomlText.slice(insertAt + 1)}`;
+	return `${jsoncText.slice(0, insertAt + 1)}${line}\n${jsoncText.slice(insertAt + 1)}`;
 };
 
 const ensureSharedD1Config = (ids: Array<{ filePath: string; databaseId?: string }>) => {
@@ -74,7 +86,7 @@ const ensureSharedD1Config = (ids: Array<{ filePath: string; databaseId?: string
 
 	const details = present.map((v) => `${v.filePath}: ${v.databaseId}`).join('\n');
 	throw new Error(
-		`D1 database_id mismatch across wrangler.toml files.\n\nAll apps must point to the same D1 to share local state:\n${details}`
+		`D1 database_id mismatch across Wrangler config files.\n\nAll apps must point to the same D1 to share local state:\n${details}`
 	);
 };
 
@@ -166,37 +178,41 @@ process.on('SIGTERM', () => {
 try {
 	log('persistDir:', persistDir);
 
-	const webWranglerToml = resolve(root, 'apps/web/wrangler.toml');
+	const webWranglerConfig = resolve(root, 'apps/web/wrangler.jsonc');
 	const postEventsWranglerToml = resolve(root, 'apps/worker-post-events/wrangler.toml');
 	const edgeGuardWranglerToml = resolve(root, 'apps/worker-edge-guard/wrangler.toml');
 	const authHasherWranglerToml = resolve(root, 'apps/auth-hasher-worker/wrangler.toml');
 	const ogWorkerWranglerToml = resolve(root, 'apps/worker-og/wrangler.toml');
 
-	const webInfo = readWranglerTomlInfo(webWranglerToml);
-	const postEventsInfo = readWranglerTomlInfo(postEventsWranglerToml);
-	const edgeGuardInfo = readWranglerTomlInfo(edgeGuardWranglerToml);
-	const authHasherInfo = readWranglerTomlInfo(authHasherWranglerToml);
-	const ogWorkerInfo = readWranglerTomlInfo(ogWorkerWranglerToml);
+	const webInfo = readWranglerConfigInfo(webWranglerConfig);
+	const postEventsInfo = readWranglerConfigInfo(postEventsWranglerToml);
+	const edgeGuardInfo = readWranglerConfigInfo(edgeGuardWranglerToml);
+	const authHasherInfo = readWranglerConfigInfo(authHasherWranglerToml);
+	const ogWorkerInfo = readWranglerConfigInfo(ogWorkerWranglerToml);
 
 	ensureSharedD1Config([
-		{ filePath: webWranglerToml, databaseId: webInfo.databaseId },
+		{ filePath: webWranglerConfig, databaseId: webInfo.databaseId },
 		{ filePath: postEventsWranglerToml, databaseId: postEventsInfo.databaseId }
 	]);
 
   const edgeGuardWorkerName = edgeGuardInfo.name ?? 'cloudflare-first-starter-worker-edge-guard';
   const authHasherWorkerName = authHasherInfo.name ?? 'cloudflare-first-starter-auth-hasher';
   const ogWorkerName = ogWorkerInfo.name ?? 'cloudflare-first-starter-worker-og';
-  const pagesConfig = readFileSync(resolve(webCwd, 'wrangler.services.toml'), 'utf8');
-  const pagesConfigWithAuth = upsertTomlVar(
-    upsertTomlVar(
-      upsertTomlVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
+  const pagesConfig = readFileSync(resolve(webCwd, 'wrangler.jsonc'), 'utf8');
+  const pagesConfigWithAuth = upsertJsoncVar(
+    upsertJsoncVar(
+      upsertJsoncVar(
+        upsertJsoncVar(pagesConfig, 'BETTER_AUTH_URL', `http://127.0.0.1:${port}`),
+        'ORPC_DB_DRIVER',
+        'd1',
+      ),
       'BETTER_AUTH_SECRET',
       defaultBetterAuthSecret,
     ),
     'OG_WORKER_BASE_URL',
     `http://127.0.0.1:${ogWorkerPort}`,
   );
-  writeFileSync(resolve(pagesConfigDir, 'wrangler.toml'), pagesConfigWithAuth);
+  writeFileSync(resolve(pagesConfigDir, 'wrangler.jsonc'), pagesConfigWithAuth);
 
   await run(['bun', 'run', '--cwd', webCwd, 'build'], root);
 	await applyLocalD1Migrations({ webCwd, drizzleDir, persistDir, log });

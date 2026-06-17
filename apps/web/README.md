@@ -34,17 +34,18 @@ Runtime modes:
 - `bun run dev:web:solo`
   in-process RPC using local SQLite
 - `bun run dev:web:cf`
-  local Pages plus D1
+  local Pages with Wrangler bindings. The checked-in config routes in-process `/rpc` and `/api` to Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`, while D1 remains bound for Better Auth. The script applies local Postgres migrations from the configured `localConnectionString`.
 
 Advanced reference mode:
 
 - `bun run dev:web:cf:services`
   capability example setup with `EDGE_GUARD`, `POST_EVENTS`, and `OG_WORKER`
-  on `localhost`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session, `post_activity` is projected inline to keep the example visible, and `/og.png` prefers `OG_WORKER_BASE_URL` before the `OG_WORKER` service binding
+  on `localhost`, it temporarily pins `ORPC_DB_DRIVER=d1`, auth hashing falls back only if Wrangler cannot proxy the local `AUTH_HASHER` session, `post_activity` is projected inline to keep the example visible, and `/og.png` prefers `OG_WORKER_BASE_URL` before the `OG_WORKER` service binding
 
 Cloudflare-first bindings:
 
 - required: `DB`, `AUTH_HASHER`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+- API database driver: `ORPC_DB_DRIVER`, `HYPERDRIVE`
 - optional: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
 - advanced capability bindings: `EDGE_GUARD`, `POST_EVENTS`, `OG_WORKER`
 - legacy reference bindings: `ORPC_DEFAULT`, `ORPC_<ROUTER>`
@@ -53,18 +54,17 @@ Secret handling:
 
 - keep `BETTER_AUTH_SECRET` in `.dev.vars` for local Pages development
 - set `BETTER_AUTH_SECRET` in Cloudflare with `wrangler pages secret put`
-- do not check secrets into `wrangler.toml`
+- do not check secrets into `wrangler.jsonc`
 
 Binding type generation:
 
 - `bun run --cwd apps/web types:cf`
-- rerun it after changing `wrangler.toml` or `wrangler.services.toml`
+- rerun it after changing `wrangler.jsonc`
 
-The app intentionally keeps extension bindings typed but unused by default:
+The app intentionally keeps some extension bindings typed or locally bound but unused by default:
 
 - `KV`
 - `APP_STATE`
-- `HYPERDRIVE`
 - `R2`
 
 Useful checks:
@@ -82,7 +82,7 @@ Artifact policy:
 
 Advanced config note:
 
-- `wrangler.toml`
-  default Pages + D1 path
-- `wrangler.services.toml`
-  capability example path used by `dev:web:cf:services`
+- `wrangler.jsonc`
+  single Pages config source for D1, Hyperdrive, Queue, and service bindings
+- `dev:web:cf:services`
+  starts the capability example Workers and uses `wrangler.jsonc` as the Pages config source

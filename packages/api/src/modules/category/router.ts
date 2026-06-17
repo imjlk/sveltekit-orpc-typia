@@ -1,18 +1,23 @@
-import { categories } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { ORPCError, implement } from '@orpc/server';
+import type * as sqliteSchema from '@repo/db/schema';
 import { categoryContract } from '@repo/shared';
 import { badRequest, internalError } from '../../lib/errors';
 import { trimRequired } from '../../lib/input';
-import type { AppContext, DbClient } from '../../types';
+import { resolveSelect, toDbRuntime } from '../../lib/db-runtime';
+import type { AppContext, DbRuntimeInput } from '../../types';
 
-type CategoryRow = typeof categories.$inferSelect;
-type CategoryInsert = typeof categories.$inferInsert;
+type CategoryRow = typeof sqliteSchema.categories.$inferSelect;
+type CategoryInsert = typeof sqliteSchema.categories.$inferInsert;
 type CategoryTreeNodeRow = CategoryRow & { children: CategoryTreeNodeRow[] };
 
 const category = implement(categoryContract).$context<AppContext>();
 
-export const createCategoryRouter = (db: DbClient) =>
-  category.router({
+export const createCategoryRouter = (input: DbRuntimeInput) => {
+  const { db, schema } = toDbRuntime(input);
+  const { categories } = schema as typeof sqliteSchema;
+
+  return category.router({
     create: category.create.handler(async ({ input }) => {
       const trimmedInput: Pick<CategoryInsert, 'name' | 'parentId'> = {
         name: trimRequired('Name', input.name),
@@ -22,7 +27,7 @@ export const createCategoryRouter = (db: DbClient) =>
       if (trimmedInput.parentId != null) {
         const parentExists = await db.query.categories.findFirst({
           columns: { id: true },
-          where: (categoriesTable, { eq }) => eq(categoriesTable.id, trimmedInput.parentId as number),
+          where: (categoriesTable: any) => eq(categoriesTable.id, trimmedInput.parentId as number),
         });
 
         if (!parentExists) {
@@ -48,10 +53,10 @@ export const createCategoryRouter = (db: DbClient) =>
       }
     }),
     list: category.list.handler(async () => {
-      return db.select().from(categories).all();
+      return resolveSelect<CategoryRow[]>(db.select().from(categories));
     }),
     tree: category.tree.handler(async () => {
-      const rows = await db.select().from(categories).all();
+      const rows = await resolveSelect<CategoryRow[]>(db.select().from(categories));
       rows.sort((a, b) => a.id - b.id);
 
       const nodesById = new Map<number, CategoryTreeNodeRow>();
@@ -75,3 +80,4 @@ export const createCategoryRouter = (db: DbClient) =>
       return roots;
     }),
   });
+};

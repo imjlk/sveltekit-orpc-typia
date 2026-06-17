@@ -1,13 +1,15 @@
-import { and, desc, eq } from 'drizzle-orm';
-import { postActivity, postTags, posts } from '@repo/db';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { ORPCError, implement } from '@orpc/server';
+import type * as sqliteSchema from '@repo/db/schema';
 import { postContract } from '@repo/shared';
 import { resolveClientIp } from '../../lib/capabilities';
 import { badRequest, internalError, notFound, rateLimited, unauthorized } from '../../lib/errors';
+import { resolveSelect, toDbRuntime } from '../../lib/db-runtime';
 import { normalizeCreatePostInput } from './normalize';
-import type { AppContext, DbClient } from '../../types';
+import type { AppContext, DbRuntimeInput } from '../../types';
 
-type PostInsert = typeof posts.$inferInsert;
+type PostInsert = typeof sqliteSchema.posts.$inferInsert;
+type PostActivityRow = typeof sqliteSchema.postActivity.$inferSelect;
 
 const post = implement(postContract).$context<AppContext>();
 
@@ -25,8 +27,11 @@ const shouldProjectActivityInline = (request: Request): boolean => {
   return hostname === '127.0.0.1' || hostname === 'localhost';
 };
 
-export const createPostRouter = (db: DbClient) =>
-  post.router({
+export const createPostRouter = (input: DbRuntimeInput) => {
+  const { db, schema } = toDbRuntime(input);
+  const { postActivity, postTags, posts } = schema as typeof sqliteSchema;
+
+  return post.router({
     create: post.create.handler(async ({ input, context }) => {
       const normalized = normalizeCreatePostInput(input);
       const userId = requireUserId(context);
@@ -58,7 +63,7 @@ export const createPostRouter = (db: DbClient) =>
       if (insertInput.categoryId != null) {
         const categoryExists = await db.query.categories.findFirst({
           columns: { id: true },
-          where: (categoriesTable, { eq }) =>
+          where: (categoriesTable: any) =>
             eq(categoriesTable.id, insertInput.categoryId as number),
         });
 
@@ -70,7 +75,7 @@ export const createPostRouter = (db: DbClient) =>
       if (uniqueTagIds.length > 0) {
         const existingTags = await db.query.tags.findMany({
           columns: { id: true },
-          where: (tagsTable, { inArray }) => inArray(tagsTable.id, uniqueTagIds),
+          where: (tagsTable: any) => inArray(tagsTable.id, uniqueTagIds),
         });
 
         if (existingTags.length !== uniqueTagIds.length) {
@@ -155,23 +160,25 @@ export const createPostRouter = (db: DbClient) =>
       const userId = requireUserId(context);
 
       return db.query.posts.findMany({
-        where: (postsTable, { eq }) => eq(postsTable.authorId, userId),
+        where: (postsTable: any) => eq(postsTable.authorId, userId),
       });
     }),
     listActivity: post.listActivity.handler(async ({ context }) => {
       const userId = requireUserId(context);
 
-      return db
-        .select()
-        .from(postActivity)
-        .where(eq(postActivity.userId, userId))
-        .orderBy(desc(postActivity.createdAt))
-        .limit(10);
+      return resolveSelect<PostActivityRow[]>(
+        db
+          .select()
+          .from(postActivity)
+          .where(eq(postActivity.userId, userId))
+          .orderBy(desc(postActivity.createdAt))
+          .limit(10),
+      );
     }),
     getWithComments: post.getWithComments.handler(async ({ input, context }) => {
       const userId = requireUserId(context);
       const row = await db.query.posts.findFirst({
-        where: (postsTable, { and, eq }) =>
+        where: (postsTable: any) =>
           and(eq(postsTable.id, input.id), eq(postsTable.authorId, userId)),
         with: {
           comments: true,
@@ -187,7 +194,7 @@ export const createPostRouter = (db: DbClient) =>
     getWithMeta: post.getWithMeta.handler(async ({ input, context }) => {
       const userId = requireUserId(context);
       const row = await db.query.posts.findFirst({
-        where: (postsTable, { and, eq }) =>
+        where: (postsTable: any) =>
           and(eq(postsTable.id, input.id), eq(postsTable.authorId, userId)),
         with: {
           category: true,
@@ -206,3 +213,4 @@ export const createPostRouter = (db: DbClient) =>
       return row;
     }),
   });
+};

@@ -1,4 +1,4 @@
-import type { D1DatabaseLike, GatewayKind, NodeEnv, PlatformLike, ServiceBinding } from './types';
+import type { D1DatabaseLike, GatewayKind, HyperdriveLike, NodeEnv, PlatformLike, ServiceBinding } from './types';
 
 export const normalizeUpstreamUrl = (kind: GatewayKind, value: string): string => {
   const trimmed = value.trim().replace(/\/+$/, '');
@@ -17,6 +17,12 @@ export const isServiceBinding = (value: unknown): value is ServiceBinding =>
 
 export const isD1Database = (value: unknown): value is D1DatabaseLike =>
   !!value && typeof value === 'object' && 'prepare' in value && typeof (value as { prepare?: unknown }).prepare === 'function';
+
+export const isHyperdrive = (value: unknown): value is HyperdriveLike =>
+  !!value &&
+  typeof value === 'object' &&
+  'connectionString' in value &&
+  typeof (value as { connectionString?: unknown }).connectionString === 'string';
 
 export const resolvePlatformEnv = (platform: PlatformLike | undefined): Record<string, unknown> | undefined => platform?.env;
 

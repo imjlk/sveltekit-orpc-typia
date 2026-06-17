@@ -23,11 +23,11 @@
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/kit": "^2.56.1",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@ttsc/unplugin": "0.10.2",
+		"@ttsc/unplugin": "0.15.4",
 		"svelte": "^5.55.1",
 		"svelte-check": "^4.4.6",
 		"typescript": "^5.9.3",
-		"typia": "13.0.0-dev.20260514",
+		"typia": "13.0.0-dev.20260612.1",
 		"vite": "^8.0.5",
 		"wrangler": "^4.80.0"
 	},

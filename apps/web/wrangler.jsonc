@@ -1,0 +1,74 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "cloudflare-first-starter-web",
+	"compatibility_date": "2026-02-12",
+	"compatibility_flags": ["nodejs_compat"],
+
+	// SvelteKit adapter-cloudflare output directory.
+	"pages_build_output_dir": ".svelte-kit/cloudflare",
+
+	"vars": {
+		// Better Auth base URL for callback and cookie generation.
+		// In production, set this to your deployed app origin.
+		"BETTER_AUTH_URL": "http://127.0.0.1:5173",
+
+		// When true, apps/web will handle /rpc in-process (no upstream proxy).
+		"ORPC_IN_PROCESS": "1",
+
+		// Use HYPERDRIVE for in-process oRPC. Better Auth can still use DB.
+		"ORPC_DB_DRIVER": "hyperdrive"
+
+		// Set BETTER_AUTH_SECRET as a Pages secret.
+	},
+
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true,
+			"persist": true
+		},
+		"traces": {
+			"enabled": true,
+			"persist": true
+		}
+	},
+
+	"d1_databases": [
+		{
+			"binding": "DB",
+			// Fill these in after `wrangler d1 create ...`
+			"database_name": "CHANGE_ME",
+			"database_id": "00000000-0000-0000-0000-000000000000"
+		}
+	],
+
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "d1baf1d31eb047d58ae2c9f27928fc79",
+			"localConnectionString": "postgres://root:mysecretpassword@localhost:50101/local"
+		}
+	],
+
+	"services": [
+		{
+			"binding": "AUTH_HASHER",
+			"service": "cloudflare-first-starter-auth-hasher"
+		},
+		{
+			"binding": "OG_WORKER",
+			"service": "cloudflare-first-starter-worker-og"
+		}
+	],
+
+	"queues": {
+		"producers": [
+			{
+				"binding": "POST_EVENTS",
+				"queue": "cloudflare-first-starter-post-events"
+			}
+		]
+	}
+}

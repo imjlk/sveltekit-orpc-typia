@@ -1,6 +1,6 @@
 import { resolveUpstream } from './resolver';
 import type { GatewayKind, PlatformLike } from './types';
-import { isD1Database, resolveNodeEnv, resolvePlatformEnv } from './utils';
+import { isD1Database, isHyperdrive, resolveNodeEnv, resolvePlatformEnv } from './utils';
 
 type LocalHandlers = {
   rpc: (request: Request) => Promise<Response>;
@@ -38,6 +38,54 @@ export const getLocalHandlers = async (
     const isDev = options.isDev ?? false;
 
     if (!isDev && env) {
+      const dbDriver = typeof env.ORPC_DB_DRIVER === 'string' ? env.ORPC_DB_DRIVER : 'd1';
+      const hyperdriveBindingName =
+        typeof env.ORPC_HYPERDRIVE_BINDING === 'string' ? env.ORPC_HYPERDRIVE_BINDING : 'HYPERDRIVE';
+      const hyperdriveBinding = env[hyperdriveBindingName];
+
+      if (dbDriver === 'hyperdrive') {
+        if (!isHyperdrive(hyperdriveBinding)) {
+          throw new Error(
+            `Missing Hyperdrive binding "${hyperdriveBindingName}" (set ORPC_HYPERDRIVE_BINDING or bind as HYPERDRIVE).`,
+          );
+        }
+
+        const [{ createHyperdriveDb }, { createApiContext, createAppRouter, createOrpcFetchHandler, createOpenApiFetchHandler }] =
+          await Promise.all([import('@repo/db/postgres'), import('@repo/api')]);
+
+        const createRequestHandler =
+          (kind: GatewayKind) =>
+          async (request: Request): Promise<Response> => {
+            const handle = await createHyperdriveDb(hyperdriveBinding);
+            try {
+              const router = createAppRouter({
+                db: handle.db,
+                schema: handle.schema,
+              });
+              const createContext = (contextRequest: Request) => createApiContext(contextRequest, { env, allowDevFallback: isDev });
+
+              if (kind === 'rpc') {
+                return createOrpcFetchHandler(router, {
+                  prefix: '/rpc',
+                  createContext,
+                })(request);
+              }
+
+              return createOpenApiFetchHandler(router, {
+                prefix: '/api',
+                createContext,
+              })(request);
+            } finally {
+              await handle.dispose();
+            }
+          };
+
+        return {
+          rpc: createRequestHandler('rpc'),
+          api: createRequestHandler('api'),
+        };
+      }
+
       const dbBindingName = typeof env.ORPC_DB_BINDING === 'string' ? env.ORPC_DB_BINDING : 'DB';
       const dbBinding = env[dbBindingName];
       if (isD1Database(dbBinding)) {

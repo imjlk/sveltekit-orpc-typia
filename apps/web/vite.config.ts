@@ -7,6 +7,7 @@ const sharedSourceDir = path.resolve(__dirname, '../../packages/shared/src');
 
 const sharedTypiaPlugin = (): Plugin => {
 	const plugin = ttsc() as Plugin;
+	const { vite: _vite, configResolved: _configResolved, ...basePlugin } = plugin as Plugin & { vite?: unknown };
 	const transform = plugin.transform;
 	const isSharedSource = (id: string) => {
 		const file = path.normalize(id.split('?')[0] ?? '');
@@ -14,9 +15,8 @@ const sharedTypiaPlugin = (): Plugin => {
 	};
 
 	return {
-		...plugin,
+		...basePlugin,
 		name: 'ttsc-shared-typia',
-		configResolved: undefined,
 		transform(code, id, options) {
 			if (!isSharedSource(id) || transform === undefined) return null;
 			if (typeof transform === 'function') {

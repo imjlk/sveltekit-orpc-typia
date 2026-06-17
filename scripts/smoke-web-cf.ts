@@ -111,6 +111,8 @@ try {
       `BETTER_AUTH_SECRET=${defaultBetterAuthSecret}`,
       '--binding',
       `BETTER_AUTH_URL=${betterAuthUrl}`,
+      '--binding',
+      'ORPC_DB_DRIVER=d1',
     ]),
     cwd: root,
     stdout: 'inherit',

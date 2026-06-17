@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { applyLocalD1Migrations } from './_cf-d1-migrations';
@@ -8,19 +9,26 @@ const port = Number(process.env.PORT ?? 5173);
 
 const webCwd = resolve(root, 'apps/web');
 const drizzleDir = resolve(root, 'packages/db/drizzle');
+const dbCwd = resolve(root, 'packages/db');
+const webWranglerConfig = resolve(webCwd, 'wrangler.jsonc');
 
 // Default wrangler persistence directory. Can be overridden for multi-process dev.
 const persistDir = resolve(root, process.env.CF_PERSIST_DIR ?? 'apps/web/.wrangler/state');
 
 const log = (...args: unknown[]) => console.log('[dev:web:cf]', ...args);
 
-const run = async (cmd: string[], cwd = root) => {
+const readConfigString = (configText: string, key: string): string | undefined => {
+  const re = new RegExp(`^\\s*"?${key}"?\\s*[:=]\\s*"([^"]+)"\\s*,?\\s*$`, 'm');
+  return configText.match(re)?.[1];
+};
+
+const run = async (cmd: string[], cwd = root, env: Record<string, string | undefined> = process.env) => {
   const child = Bun.spawn({
     cmd,
     cwd,
     stdout: 'inherit',
     stderr: 'inherit',
-    env: process.env,
+    env,
   });
   const code = await child.exited;
   if (code !== 0) {
@@ -58,6 +66,17 @@ try {
 
   // Ensure D1 schema is applied into the same persistence directory used by `wrangler pages dev`.
   await applyLocalD1Migrations({ webCwd, drizzleDir, persistDir, log });
+
+  const wranglerConfigText = readFileSync(webWranglerConfig, 'utf8');
+  const dbDriver = readConfigString(wranglerConfigText, 'ORPC_DB_DRIVER') ?? 'd1';
+  const localConnectionString = readConfigString(wranglerConfigText, 'localConnectionString');
+
+  if (dbDriver === 'hyperdrive' && localConnectionString) {
+    await run(['bun', 'run', 'db:migrate:pg'], dbCwd, {
+      ...process.env,
+      DATABASE_URL: localConnectionString,
+    });
+  }
 
   child = Bun.spawn({
     cmd: createWranglerCommand([

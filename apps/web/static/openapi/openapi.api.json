@@ -854,13 +854,13 @@
                     }
                   },
                   "required": [
-                    "comments",
                     "authorId",
                     "categoryId",
                     "content",
                     "createdAt",
                     "id",
-                    "title"
+                    "title",
+                    "comments"
                   ],
                   "additionalProperties": false
                 }
@@ -1214,14 +1214,14 @@
                     }
                   },
                   "required": [
-                    "category",
-                    "tags",
                     "authorId",
                     "categoryId",
                     "content",
                     "createdAt",
                     "id",
-                    "title"
+                    "title",
+                    "category",
+                    "tags"
                   ],
                   "additionalProperties": false
                 }
@@ -2687,13 +2687,13 @@
           }
         },
         "required": [
-          "comments",
           "authorId",
           "categoryId",
           "content",
           "createdAt",
           "id",
-          "title"
+          "title",
+          "comments"
         ],
         "additionalProperties": false
       },
@@ -2788,14 +2788,14 @@
           }
         },
         "required": [
-          "category",
-          "tags",
           "authorId",
           "categoryId",
           "content",
           "createdAt",
           "id",
-          "title"
+          "title",
+          "category",
+          "tags"
         ],
         "additionalProperties": false
       },
@@ -2829,11 +2829,11 @@
           }
         },
         "required": [
-          "children",
           "createdAt",
           "id",
           "name",
-          "parentId"
+          "parentId",
+          "children"
         ],
         "additionalProperties": false
       }
