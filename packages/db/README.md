@@ -22,7 +22,7 @@ The schema includes:
 - Better Auth tables such as `users`, `sessions`, `accounts`, and `verifications`
 - relations that let the API keep demo data scoped to the authenticated user
 
-Typical workflow:
+Typical D1/SQLite workflow:
 
 1. Edit `src/schema.ts`
 2. Run `bun run --cwd packages/db db:generate`
@@ -40,5 +40,7 @@ Hyperdrive/Postgres support is intentionally separate:
 3. Apply local or remote Postgres migrations with `DATABASE_URL=<postgres-url> bun run --cwd packages/db db:migrate:pg`
 
 The Pages gateway uses this path when `ORPC_DB_DRIVER=hyperdrive` and `HYPERDRIVE` is bound in `apps/web/wrangler.jsonc`.
+
+For new scaffolded domains, `bun scripts/scaffold-domain.ts --db dual` updates both schemas and type files. Use `--db d1` or `--db hyperdrive` when a domain is intentionally limited to one runtime.
 
 The advanced queue example writes `post_activity` rows through `apps/worker-post-events`, but it still targets the same shared D1 schema.

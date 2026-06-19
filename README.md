@@ -67,7 +67,7 @@ Choose one local runtime:
 - `bun run dev`
   Vite web app plus Bun API server
 - `bun run dev:web:cf`
-  local Pages with Wrangler bindings. The checked-in config currently routes in-process `/rpc` and `/api` to Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`, while D1 remains bound for Better Auth. This script applies the local Postgres migration from the configured `localConnectionString`.
+  local Pages with Wrangler bindings plus local `AUTH_HASHER` and `OG_WORKER` service sessions. The checked-in config currently routes in-process `/rpc` and `/api` to Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`, while D1 remains bound for Better Auth. This script applies D1 migrations and, when Hyperdrive is active, the local Postgres migration from the configured `localConnectionString`.
 
 ## Deploy To Cloudflare
 
@@ -135,6 +135,7 @@ Use extra Workers only when Cloudflare capabilities are the reason:
 Current notes:
 
 - `bun run dev:web:cf:services` is an advanced reference mode only.
+- The default `bun run dev:web:cf` stack starts Pages, `AUTH_HASHER`, and `OG_WORKER`; use it before reaching for split-service examples.
 - `apps/web/wrangler.jsonc` is the single Pages config source; service bindings and Hyperdrive live there together.
 - The service-mode script temporarily pins `ORPC_DB_DRIVER=d1` so the legacy capability example keeps sharing the same local D1 state across Pages and Workers.
 - It boots the capability example path: `EDGE_GUARD` + `POST_EVENTS` + `OG_WORKER`.

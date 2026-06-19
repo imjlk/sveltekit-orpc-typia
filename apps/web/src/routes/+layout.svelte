@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
 
 	type SessionLike = {
@@ -28,7 +29,7 @@
 
 <div class="shell">
 	<header class="topbar">
-		<a class="brand" href="/">
+		<a class="brand" href={resolve('/')}>
 			<span class="brand-mark">CF</span>
 			<span>
 				<strong>Cloudflare First Starter</strong>
@@ -37,10 +38,10 @@
 		</a>
 
 		<nav class="nav">
-			<a href="/">Home</a>
-			<a href="/posts">Posts Demo</a>
-			<a href="/api/docs">REST Docs</a>
-			<a href="/api/docs/rpc">RPC Docs</a>
+			<a href={resolve('/')}>Home</a>
+			<a href={resolve('/posts')}>Posts Demo</a>
+			<a href={resolve('/api/docs')}>REST Docs</a>
+			<a href={resolve('/api/docs/rpc')}>RPC Docs</a>
 		</nav>
 
 		<div class="account">
@@ -50,11 +51,11 @@
 					<span>{data.session.user.email ?? data.session.user.id}</span>
 				</div>
 
-				<form method="POST" action="/sign-out">
+				<form method="POST" action={resolve('/sign-out')}>
 					<button type="submit" class="ghost-button">Sign out</button>
 				</form>
 			{:else}
-				<a class="primary-link" href="/auth/sign-in">
+				<a class="primary-link" href={resolve('/auth/sign-in')}>
 					Sign in
 				</a>
 			{/if}

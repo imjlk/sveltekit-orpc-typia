@@ -101,9 +101,10 @@ Keep that positioning honest in code and docs.
 When adding or changing a domain, update the SSOT layers in order:
 
 1. Database
-   - edit `packages/db/src/schema.ts`
-   - generate migration SQL with `bun run --cwd packages/db db:generate`
-   - if the domain participates in the Hyperdrive/Postgres path, mirror the table shape in `packages/db/src/pg-schema.ts` and generate SQL with `bun run --cwd packages/db db:generate:pg`
+   - edit `packages/db/src/schema.ts` for D1/SQLite
+   - edit `packages/db/src/pg-schema.ts` for Hyperdrive/Postgres
+   - generate D1/SQLite migration SQL with `bun run --cwd packages/db db:generate`
+   - generate Hyperdrive/Postgres migration SQL with `bun run --cwd packages/db db:generate:pg`
 2. Shared contract and types
    - update `packages/shared/src/modules/<domain>/types.ts`
    - update `packages/shared/src/modules/<domain>/schema.ts`
@@ -120,7 +121,8 @@ When adding or changing a domain, update the SSOT layers in order:
 
 For new domains, prefer starting from:
 
-- `bun scripts/scaffold-domain.ts --name <name> --table <table> --group <content|meta|none>`
+- `bun scripts/scaffold-domain.ts --name <name> --table <table> --group <content|meta|none> --db dual`
+- Use `--db d1` for D1-only domains, `--db hyperdrive` for Hyperdrive/Postgres-only domains, and `--db none` when the DB layer will be added manually.
 
 When contracts change, regenerate the checked-in specs:
 

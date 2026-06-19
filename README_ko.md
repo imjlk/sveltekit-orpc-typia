@@ -67,7 +67,7 @@ bun run check
 - `bun run dev`
   Vite web app + Bun API 서버
 - `bun run dev:web:cf`
-  Wrangler binding을 포함한 local Pages 실행. 현재 체크인된 설정은 `ORPC_DB_DRIVER=hyperdrive` 로 in-process `/rpc`, `/api` 를 Hyperdrive/Postgres에 연결하고, D1은 Better Auth용으로 계속 바인딩합니다. 이 스크립트는 설정된 `localConnectionString` 기준으로 로컬 Postgres migration도 먼저 적용합니다.
+  Wrangler binding과 로컬 `AUTH_HASHER`, `OG_WORKER` service session을 포함한 local Pages 실행. 현재 체크인된 설정은 `ORPC_DB_DRIVER=hyperdrive` 로 in-process `/rpc`, `/api` 를 Hyperdrive/Postgres에 연결하고, D1은 Better Auth용으로 계속 바인딩합니다. 이 스크립트는 D1 migration을 적용하고, Hyperdrive가 활성화된 경우 설정된 `localConnectionString` 기준으로 로컬 Postgres migration도 적용합니다.
 
 ## Cloudflare 배포
 
@@ -135,6 +135,7 @@ flowchart LR
 현재 기준:
 
 - `bun run dev:web:cf:services` 는 고급 참고 모드입니다.
+- 기본 `bun run dev:web:cf` stack은 Pages, `AUTH_HASHER`, `OG_WORKER`를 함께 띄우므로 split-service 예시보다 먼저 사용하세요.
 - `apps/web/wrangler.jsonc` 가 단일 Pages config source입니다. service binding과 Hyperdrive 설정은 이 파일에 함께 둡니다.
 - service mode 스크립트는 legacy capability 예제가 Pages와 Workers 사이에서 같은 local D1 상태를 공유하도록 임시로 `ORPC_DB_DRIVER=d1` 을 지정합니다.
 - 이 모드는 `EDGE_GUARD` + `POST_EVENTS` + `OG_WORKER` capability 예시를 띄웁니다.

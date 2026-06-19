@@ -31,6 +31,22 @@ const cargoAvailable = async (): Promise<boolean> => {
   }
 };
 
+const writeTextIfChanged = async (filePath: string, contents: string) => {
+  if (existsSync(filePath) && await Bun.file(filePath).text() === contents) return;
+  await Bun.write(filePath, contents);
+};
+
+const writeBytesIfChanged = async (filePath: string, contents: Uint8Array) => {
+  if (existsSync(filePath)) {
+    const current = await Bun.file(filePath).bytes();
+    if (current.byteLength === contents.byteLength && current.every((value, index) => value === contents[index])) {
+      return;
+    }
+  }
+
+  await Bun.write(filePath, contents);
+};
+
 const writeBuildManifest = async () => {
   const hash = createHash('sha256');
   for (const relativePath of buildManifestInputs) {
@@ -41,28 +57,26 @@ const writeBuildManifest = async () => {
   }
 
   const artifactPreset = resolveHasherPreset(process.env);
+  const contents = `${JSON.stringify(
+    {
+      artifactPreset: artifactPreset.id,
+      artifactArgon2id: artifactPreset.argon2id,
+      artifactOwaspAligned: isOwaspAlignedPreset(artifactPreset),
+      artifactSourceChecksum: hash.digest('hex'),
+      generatedBy: 'bun run build:kernel',
+      inputs: [...buildManifestInputs],
+    },
+    null,
+    2,
+  )}\n`;
 
-  await Bun.write(
-    buildManifestPath,
-    `${JSON.stringify(
-      {
-        artifactPreset: artifactPreset.id,
-        artifactArgon2id: artifactPreset.argon2id,
-        artifactOwaspAligned: isOwaspAlignedPreset(artifactPreset),
-        artifactSourceChecksum: hash.digest('hex'),
-        generatedBy: 'bun run build:kernel',
-        inputs: [...buildManifestInputs],
-      },
-      null,
-      2,
-    )}\n`,
-  );
+  await writeTextIfChanged(buildManifestPath, contents);
 };
 
 const main = async () => {
   if (await cargoAvailable()) {
     await Bun.$`cargo build --manifest-path ${manifestPath} -p auth-hasher-rust-wasm-kernel --target wasm32-unknown-unknown --release`;
-    await Bun.write(committedWasmPath, Bun.file(builtWasmPath));
+    await writeBytesIfChanged(committedWasmPath, await Bun.file(builtWasmPath).bytes());
     await writeBuildManifest();
     return;
   }

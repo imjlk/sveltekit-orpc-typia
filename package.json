@@ -6,7 +6,7 @@
     "dev:web": "bun run --cwd apps/web dev",
     "dev:og-worker": "bun run --cwd apps/worker-og dev",
     "dev:web:solo": "bun scripts/dev-web.ts",
-    "dev:web:cf": "bun scripts/dev-web-cf.ts",
+    "dev:web:cf": "bun scripts/dev-cloudflare-stack.ts",
     "dev:web:cf:reset": "bun scripts/reset-web-cf-state.ts",
     "dev:web:cf:services": "bun scripts/dev-web-cf-services.ts",
     "dev": "bun scripts/dev.ts",

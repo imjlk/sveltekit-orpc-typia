@@ -2,14 +2,15 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 type Group = 'content' | 'meta' | 'none';
+type DbTarget = 'd1' | 'hyperdrive' | 'dual' | 'none';
 
 type Options = {
   name: string;
   table: string;
   group: Group;
+  db: DbTarget;
   dryRun: boolean;
   force: boolean;
-  noDb: boolean;
 };
 
 type Operation =
@@ -25,18 +26,19 @@ const die = (message: string): never => {
 
 const usage = () => `
 Usage:
-  bun scripts/scaffold-domain.ts --name <name> --table <table> --group <content|meta|none> [--dry-run] [--force] [--no-db]
+  bun scripts/scaffold-domain.ts --name <name> --table <table> --group <content|meta|none> [--db <d1|hyperdrive|dual|none>] [--dry-run] [--force] [--no-db]
 
 Examples:
   bun scripts/scaffold-domain.ts --name widget --table widgets --group content --dry-run
-  bun scripts/scaffold-domain.ts --name widget --table widgets --group content
+  bun scripts/scaffold-domain.ts --name widget --table widgets --group content --db dual
+  bun scripts/scaffold-domain.ts --name ledger --table ledgers --group meta --db hyperdrive
 `.trim();
 
 const parseArgs = (argv: string[]): Options => {
   const out: Partial<Options> = {
+    db: 'dual',
     dryRun: false,
     force: false,
-    noDb: false,
   };
 
   const takeValue = (i: number, flag: string) => {
@@ -62,7 +64,7 @@ const parseArgs = (argv: string[]): Options => {
       continue;
     }
     if (arg === '--no-db') {
-      out.noDb = true;
+      out.db = 'none';
       continue;
     }
 
@@ -96,6 +98,16 @@ const parseArgs = (argv: string[]): Options => {
       continue;
     }
 
+    if (arg === '--db') {
+      out.db = takeValue(i, '--db') as DbTarget;
+      i++;
+      continue;
+    }
+    if (arg.startsWith('--db=')) {
+      out.db = arg.slice('--db='.length) as DbTarget;
+      continue;
+    }
+
     die(`Unknown arg: ${arg}\n\n${usage()}`);
   }
 
@@ -113,6 +125,10 @@ const parseArgs = (argv: string[]): Options => {
 
   if (out.group !== 'content' && out.group !== 'meta' && out.group !== 'none') {
     die(`Invalid --group "${out.group}". Expected content|meta|none`);
+  }
+
+  if (out.db !== 'd1' && out.db !== 'hyperdrive' && out.db !== 'dual' && out.db !== 'none') {
+    die(`Invalid --db "${out.db}". Expected d1|hyperdrive|dual|none`);
   }
 
   return out as Options;
@@ -277,7 +293,7 @@ const addApiRouterImport = (text: string, opts: { name: string; Name: string }) 
 };
 
 const addApiRouterEntry = (text: string, opts: { name: string; Name: string; routerVar: string }) => {
-  const entry = `    ${opts.name}: create${opts.Name}Router(db),`;
+  const entry = `    ${opts.name}: create${opts.Name}Router(runtime),`;
   if (text.includes(entry)) return text;
 
   const marker = `  });`;
@@ -290,25 +306,25 @@ const addApiRoutersImport = (text: string, opts: { name: string; Name: string })
 };
 
 const addApiRoutersEntry = (text: string, opts: { name: string; Name: string; group: Group }) => {
-  const entry = `    ${opts.name}: create${opts.Name}Router(db),`;
+  const entry = `    ${opts.name}: create${opts.Name}Router(runtime),`;
 
   if (opts.group === 'none') return text;
 
   if (opts.group === 'content') {
     if (text.includes(entry)) return text;
-    const marker = `  });\n\nexport type ContentRouter`;
+    const marker = `  });\n};\n\nexport type ContentRouter`;
     if (!text.includes(marker)) die(`Failed to find createContentRouter block`);
     return insertBefore(text, marker, `${entry}\n`);
   }
 
   // meta
   if (text.includes(entry)) return text;
-  const marker = `  });\n\nexport type MetaRouter`;
+  const marker = `  });\n};\n\nexport type MetaRouter`;
   if (!text.includes(marker)) die(`Failed to find createMetaRouter block`);
   return insertBefore(text, marker, `${entry}\n`);
 };
 
-const scaffoldDb = (ops: Operation[], options: Options, vars: { table: string; tableVar: string; Name: string }) => {
+const scaffoldD1Db = (ops: Operation[], options: Options, vars: { table: string; tableVar: string; Name: string }) => {
   const schemaPath = resolve(root, 'packages/db/src/schema.ts');
   modifyFile(
     ops,
@@ -382,23 +398,96 @@ export const ${vars.tableVar} = sqliteTable(
   );
 };
 
+const scaffoldPgDb = (ops: Operation[], options: Options, vars: { table: string; tableVar: string; Name: string }) => {
+  const schemaPath = resolve(root, 'packages/db/src/pg-schema.ts');
+  modifyFile(
+    ops,
+    schemaPath,
+    (text) => {
+      if (text.includes(`pgTable(\n  '${vars.table}',`)) return text;
+      if (text.includes(`export const ${vars.tableVar} = pgTable`)) return text;
+
+      const tableBlock = `
+export const ${vars.tableVar} = pgTable(
+  '${vars.table}',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+  },
+);
+
+`;
+
+      text = insertBefore(text, `export const categoriesRelations`, tableBlock);
+
+      const relationsConst = `${vars.tableVar}Relations`;
+      if (!text.includes(`export const ${relationsConst} = relations(`)) {
+        text = text.trimEnd() + `\n\nexport const ${relationsConst} = relations(${vars.tableVar}, () => ({}));\n`;
+      }
+
+      return text;
+    },
+    options,
+  );
+
+  const schemaTypesPath = resolve(root, 'packages/db/src/pg-schema-types.ts');
+  modifyFile(
+    ops,
+    schemaTypesPath,
+    (text) => {
+      const importRe = /^import \{([^}]+)\} from '\.\/pg-schema';$/m;
+      const m = text.match(importRe);
+      if (!m) die(`Failed to find pg schema import in ${schemaTypesPath}`);
+
+      const raw = m[1] ?? '';
+      const names = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (!names.includes(vars.tableVar)) {
+        names.push(vars.tableVar);
+        const replaced = `import { ${names.join(', ')} } from './pg-schema';`;
+        text = text.replace(importRe, replaced);
+      }
+
+      const rowType = `Pg${vars.Name}Row`;
+      const insertType = `Pg${vars.Name}InsertRow`;
+      if (!text.includes(`export type ${rowType} =`)) {
+        text =
+          text.trimEnd() +
+          `\n\nexport type ${rowType} = InferSelectModel<typeof ${vars.tableVar}>;\n` +
+          `export type ${insertType} = InferInsertModel<typeof ${vars.tableVar}>;\n`;
+      }
+
+      return text;
+    },
+    options,
+  );
+};
+
 const scaffoldSharedModule = (
   ops: Operation[],
   options: Options,
-  vars: { name: string; Name: string },
+  vars: { name: string; Name: string; db: DbTarget },
 ) => {
   const dir = resolve(root, `packages/shared/src/modules/${vars.name}`);
-  ensureDir(dir);
 
   const typesPath = resolve(dir, 'types.ts');
   const schemaPath = resolve(dir, 'schema.ts');
   const contractPath = resolve(dir, 'contract.ts');
   const errorsPath = resolve(dir, 'errors.ts');
+  const rowTypeSource =
+    vars.db === 'hyperdrive'
+      ? `import('@repo/db/pg-schema-types').Pg${vars.Name}Row`
+      : `import('@repo/db/schema-types').${vars.Name}Row`;
 
   const typesText = `import type { tags } from 'typia';
 import type { SerializeForTransport } from '../../transport/serialize';
 
-type ${vars.Name}Row = import('@repo/db/schema-types').${vars.Name}Row;
+type ${vars.Name}Row = ${rowTypeSource};
 
 export type ${vars.Name} = SerializeForTransport<${vars.Name}Row>;
 
@@ -421,7 +510,7 @@ import type { Create${vars.Name}Input, Delete${vars.Name}Input, Get${vars.Name}I
 import { serializeForTransport } from '../../transport/serialize';
 import { typiaMappedSchema, typiaSchema } from '../../transport/typia';
 
-type ${vars.Name}Row = import('@repo/db/schema-types').${vars.Name}Row;
+type ${vars.Name}Row = ${rowTypeSource};
 
 export const create${vars.Name}Schema = typiaSchema(
   typia.createValidate<Create${vars.Name}Input>(),
@@ -600,27 +689,31 @@ const scaffoldSharedRegistryAndExports = (
 const scaffoldApiModule = (
   ops: Operation[],
   options: Options,
-  vars: { name: string; Name: string; tableVar: string; group: Group },
+  vars: { name: string; Name: string; tableVar: string; group: Group; db: DbTarget },
 ) => {
   const dir = resolve(root, `packages/api/src/modules/${vars.name}`);
-  ensureDir(dir);
 
   const routerPath = resolve(dir, 'router.ts');
+  const schemaImport = vars.db === 'hyperdrive' ? '@repo/db/pg-schema' : '@repo/db/schema';
 
-  const routerText = `import { ${vars.tableVar} } from '@repo/db';
+  const routerText = `import type * as domainSchema from '${schemaImport}';
 import { ORPCError, implement } from '@orpc/server';
 import { ${vars.name}Contract } from '@repo/shared';
 import { eq } from 'drizzle-orm';
 import { badRequest, internalError, notFound } from '../../lib/errors';
+import { resolveSelect, toDbRuntime } from '../../lib/db-runtime';
 import { trimRequired } from '../../lib/input';
-import type { DbClient } from '../../types';
+import type { DbRuntimeInput } from '../../types';
 
-type ${vars.Name}Insert = typeof ${vars.tableVar}.$inferInsert;
+type ${vars.Name}Insert = typeof domainSchema.${vars.tableVar}.$inferInsert;
 
 const ${vars.name} = implement(${vars.name}Contract);
 
-export const create${vars.Name}Router = (db: DbClient) =>
-  ${vars.name}.router({
+export const create${vars.Name}Router = (input: DbRuntimeInput) => {
+  const { db, schema } = toDbRuntime(input);
+  const { ${vars.tableVar} } = schema as typeof domainSchema;
+
+  return ${vars.name}.router({
     create: ${vars.name}.create.handler(async ({ input }) => {
       const insertInput: Pick<${vars.Name}Insert, 'name'> = {
         name: trimRequired('Name', input.name),
@@ -644,11 +737,11 @@ export const create${vars.Name}Router = (db: DbClient) =>
       }
     }),
     list: ${vars.name}.list.handler(async () => {
-      return db.select().from(${vars.tableVar}).all();
+      return resolveSelect(db.select().from(${vars.tableVar}));
     }),
     get: ${vars.name}.get.handler(async ({ input }) => {
       const row = await db.query.${vars.tableVar}.findFirst({
-        where: (${vars.tableVar}Table, { eq }) => eq(${vars.tableVar}Table.id, input.id),
+        where: (${vars.tableVar}Table: any) => eq(${vars.tableVar}Table.id, input.id),
       });
 
       if (!row) {
@@ -659,7 +752,7 @@ export const create${vars.Name}Router = (db: DbClient) =>
     }),
     update: ${vars.name}.update.handler(async ({ input }) => {
       const existing = await db.query.${vars.tableVar}.findFirst({
-        where: (${vars.tableVar}Table, { eq }) => eq(${vars.tableVar}Table.id, input.id),
+        where: (${vars.tableVar}Table: any) => eq(${vars.tableVar}Table.id, input.id),
       });
 
       if (!existing) {
@@ -706,6 +799,7 @@ export const create${vars.Name}Router = (db: DbClient) =>
       return row;
     }),
   });
+};
 `;
 
   upsertFile(ops, routerPath, routerText, options);
@@ -752,13 +846,17 @@ const main = () => {
     die(`Derived invalid table var name from --table "${options.table}": "${tableVar}"`);
   }
 
-  if (!options.noDb) {
-    scaffoldDb(ops, options, { table: options.table, tableVar, Name });
+  if (options.db === 'd1' || options.db === 'dual') {
+    scaffoldD1Db(ops, options, { table: options.table, tableVar, Name });
   }
 
-  scaffoldSharedModule(ops, options, { name: options.name, Name });
+  if (options.db === 'hyperdrive' || options.db === 'dual') {
+    scaffoldPgDb(ops, options, { table: options.table, tableVar, Name });
+  }
+
+  scaffoldSharedModule(ops, options, { name: options.name, Name, db: options.db });
   scaffoldSharedRegistryAndExports(ops, options, { name: options.name, Name, group: options.group });
-  scaffoldApiModule(ops, options, { name: options.name, Name, tableVar, group: options.group });
+  scaffoldApiModule(ops, options, { name: options.name, Name, tableVar, group: options.group, db: options.db });
   scaffoldApiAggregators(ops, options, { name: options.name, Name, group: options.group });
 
   const opSummary = ops
@@ -775,7 +873,12 @@ const main = () => {
   }
 
   console.log('\nNext steps:');
-  console.log('- bun run --cwd packages/db db:generate   # create SQL migrations from schema changes');
+  if (options.db === 'd1' || options.db === 'dual') {
+    console.log('- bun run --cwd packages/db db:generate     # create D1/SQLite SQL migrations');
+  }
+  if (options.db === 'hyperdrive' || options.db === 'dual') {
+    console.log('- bun run --cwd packages/db db:generate:pg  # create Hyperdrive/Postgres SQL migrations');
+  }
   console.log('- bun run gen:openapi                     # regenerate checked-in OpenAPI specs');
   console.log('- bun run check && bun run verify:openapi  # typecheck + ensure spec is committed');
 };
