@@ -103,14 +103,17 @@ try {
   const dbPath = resolveE2eDbPath();
   ensureDbDir(dbPath);
 
-  // Build shared once (no watch) to keep e2e stable/fast.
-  const sharedBuild = spawnPrefixed({
-    name: 'shared',
-    cmd: ['bun', 'run', '--cwd', 'packages/shared', 'build'],
-  });
-  const sharedExitCode = await sharedBuild.exited;
-  if (sharedExitCode !== 0) {
-    process.exit(sharedExitCode);
+  if (!existsSync(sharedDistEntry)) {
+    // Fallback for direct script execution; the package script prebuilds shared
+    // outside Playwright's webServer timeout.
+    const sharedBuild = spawnPrefixed({
+      name: 'shared',
+      cmd: ['bun', 'run', '--cwd', 'packages/shared', 'build'],
+    });
+    const sharedExitCode = await sharedBuild.exited;
+    if (sharedExitCode !== 0) {
+      process.exit(sharedExitCode);
+    }
   }
 
   await waitForSharedDist();
