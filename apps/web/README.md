@@ -34,7 +34,7 @@ Runtime modes:
 - `bun run dev:web:solo`
   in-process RPC using local SQLite
 - `bun run dev:web:cf`
-  local Pages with Wrangler bindings. The checked-in config routes in-process `/rpc` and `/api` to Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`, while D1 remains bound for Better Auth. The script applies local Postgres migrations from the configured `localConnectionString`.
+  local Pages with Wrangler bindings plus local `AUTH_HASHER` and `OG_WORKER` service sessions. The checked-in config routes in-process `/rpc` and `/api` to Hyperdrive/Postgres through `ORPC_DB_DRIVER=hyperdrive`, while D1 remains bound for Better Auth. The script applies D1 migrations and, when Hyperdrive is active, applies local Postgres migrations from the configured `localConnectionString`.
 
 Advanced reference mode:
 
