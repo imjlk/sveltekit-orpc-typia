@@ -4,6 +4,10 @@ Cloudflare-first GitHub template for teams that want a contract-first stack with
 
 Korean translation: [`README_ko.md`](./README_ko.md)
 
+Public release checklist: [`docs/public-release.md`](./docs/public-release.md)
+
+Security policy: [`SECURITY.md`](./SECURITY.md)
+
 ## What This Template Gives You
 
 - `SvelteKit` running on Cloudflare Pages
@@ -185,6 +189,7 @@ Template hygiene rules:
 - do not commit temp SQLite files
 - keep checked-in OpenAPI output in sync with `bun run gen:openapi`
 - keep checked-in Cloudflare binding types in sync with `bun run types:cf`
+- run the public release checklist in [`docs/public-release.md`](./docs/public-release.md) before making a repository public or marking it as a GitHub template
 
 ## Package Docs
 

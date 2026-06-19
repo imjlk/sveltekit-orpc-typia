@@ -18,13 +18,19 @@ Thanks for working on the Cloudflare First Starter.
 ```bash
 bun install
 bun run check
-bun test packages/gateway/src/resolver.test.ts packages/shared/test/auth-bridge.test.ts apps/web/src/lib/server/auth-social.test.ts apps/web/src/lib/server/auth-password-hasher.test.ts
+bun run test:unit
 ```
 
 Run web e2e before merging changes that affect auth, gateway routing, or the starter flows:
 
 ```bash
 bun run test:e2e
+```
+
+Run the Cloudflare local smoke before merging changes that affect Wrangler config, service bindings, D1 migrations, Hyperdrive, `AUTH_HASHER`, or `OG_WORKER`:
+
+```bash
+bun run smoke:web:cf
 ```
 
 ## Schema And Contract Changes
@@ -41,6 +47,7 @@ Generate new migrations and OpenAPI output when applicable:
 
 ```bash
 bun run --cwd packages/db db:generate
+bun run --cwd packages/db db:generate:pg
 bun run gen:openapi
 ```
 
@@ -50,3 +57,5 @@ bun run gen:openapi
 - call out Cloudflare binding or migration changes
 - mention docs updates
 - mention any skipped verification
+
+Before publishing the repository or converting it into a GitHub template, run through [`docs/public-release.md`](./docs/public-release.md).
