@@ -6,6 +6,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 type ProcSpec = {
   name: string;
   cmd: string[];
+  cwd?: string;
   env?: Record<string, string | undefined>;
 };
 
@@ -44,7 +45,7 @@ const pipeStream = async (name: string, stream: ReadableStream<Uint8Array> | nul
 const spawnPrefixed = (spec: ProcSpec) => {
   const child = Bun.spawn({
     cmd: spec.cmd,
-    cwd: root,
+    cwd: spec.cwd ?? root,
     stdout: 'pipe',
     stderr: 'pipe',
     env: spec.env ?? process.env,
@@ -116,7 +117,8 @@ try {
 
   const web = spawnPrefixed({
     name: 'web',
-    cmd: ['bun', 'run', '--cwd', 'apps/web', 'dev', '--', '--host', '127.0.0.1', '--port', webPort],
+    cmd: ['bunx', '--bun', 'vite', 'dev', '--host', '127.0.0.1', '--port', webPort, '--strictPort'],
+    cwd: resolve(root, 'apps/web'),
     env: {
       ...process.env,
       ORPC_IN_PROCESS: process.env.ORPC_IN_PROCESS ?? '1',

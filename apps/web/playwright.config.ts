@@ -30,7 +30,7 @@ export default defineConfig({
 			timeout: 120_000
 		},
 		{
-			command: `ORPC_API_URL=${apiBaseUrl}/rpc ${databaseEnv} bun run dev -- --host 127.0.0.1 --port ${webPort}`,
+			command: `ORPC_API_URL=${apiBaseUrl}/rpc ${databaseEnv} bun run dev -- --host 127.0.0.1 --port ${webPort} --strictPort`,
 			url: webBaseUrl,
 			reuseExistingServer: false,
 			timeout: 120_000
