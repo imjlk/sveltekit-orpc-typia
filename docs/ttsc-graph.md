@@ -30,6 +30,19 @@ Use this as a local MCP server entry for MCP-capable agents:
 
 Start the agent from the repository root so `ttsc-graph` can find the workspace `tsconfig.json` files.
 
+For Codex, register the MCP server in the global config while pinning the command
+to this repository:
+
+```toml
+[mcp_servers.ttsc-graph-sveltekit-orpc-typia]
+command = "/Users/imjlk/.bun/bin/bun"
+args = ["run", "--cwd", "/Users/imjlk/repos/imjlk/sveltekit-orpc-typia", "graph:ttsc"]
+startup_timeout_sec = 120
+```
+
+Restart the Codex session after changing MCP config. The server is repo-scoped:
+it uses this workspace's `ttsc`, platform binary, and `tsconfig.json`.
+
 ## Local Viewer
 
 To open the graph viewer locally:

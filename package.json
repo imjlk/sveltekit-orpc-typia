@@ -22,8 +22,8 @@
     "test:e2e:solo": "bun run --cwd apps/web test:e2e:solo",
     "smoke:web:cf": "bun scripts/smoke-web-cf.ts",
     "smoke:web:cf:services": "bun scripts/smoke-web-cf-services.ts",
-    "graph:ttsc": "bun node_modules/@ttsc/graph/lib/bin.js",
-    "graph:ttsc:view": "bun node_modules/@ttsc/graph/lib/bin.js view"
+    "graph:ttsc": "bun scripts/ttsc-graph.ts",
+    "graph:ttsc:view": "bun scripts/ttsc-graph.ts view"
   },
   "workspaces": [
     "apps/*",
