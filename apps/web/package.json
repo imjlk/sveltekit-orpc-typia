@@ -11,8 +11,8 @@
     "prepare": "bun node_modules/@sveltejs/kit/svelte-kit.js sync || echo ''",
     "types:cf": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false",
     "types:cf:check": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false --check",
-    "check": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun node_modules/@sveltejs/kit/svelte-kit.js sync && bun node_modules/typescript/bin/tsc -p ./tsconfig.json --noEmit",
-    "check:watch": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun node_modules/@sveltejs/kit/svelte-kit.js sync && bun node_modules/typescript/bin/tsc -p ./tsconfig.json --noEmit --watch --preserveWatchOutput",
+    "check": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun node_modules/@sveltejs/kit/svelte-kit.js sync && bun scripts/write-route-type-stubs.ts && bun node_modules/typescript/bin/tsc -p ./tsconfig.json --noEmit",
+    "check:watch": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bun node_modules/@sveltejs/kit/svelte-kit.js sync && bun scripts/write-route-type-stubs.ts && bun node_modules/typescript/bin/tsc -p ./tsconfig.json --noEmit --watch --preserveWatchOutput",
     "test:e2e": "(test -f ../../packages/shared/dist/index.js || bun run --cwd ../../packages/shared build) && bunx playwright test",
     "test:e2e:solo": "bun run --cwd ../../packages/shared build && bunx playwright test -c playwright.solo.config.ts"
   },
