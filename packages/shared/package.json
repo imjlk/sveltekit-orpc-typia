@@ -36,22 +36,22 @@
     }
   },
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch"
+    "build": "bun scripts/build.ts",
+    "dev": "bun scripts/build.ts --watch"
   },
   "devDependencies": {
-    "@ttsc/unplugin": "0.15.4",
+    "@ttsc/unplugin": "0.16.7",
     "@types/bun": "latest",
-    "tsup": "^8.5.1"
+    "esbuild": "^0.28.1"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "7.0.1-rc"
   },
   "dependencies": {
     "@orpc/contract": "^1.14.6",
     "@orpc/server": "^1.14.6",
     "@repo/db": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
-    "typia": "13.0.0-dev.20260612.1"
+    "typia": "13.0.0-dev.20260626.1"
   }
 }

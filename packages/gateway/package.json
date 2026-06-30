@@ -12,7 +12,7 @@
     }
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "7.0.1-rc"
   },
   "dependencies": {
     "@orpc/server": "^1.14.6",

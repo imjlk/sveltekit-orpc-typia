@@ -13,7 +13,7 @@
     "build": "bun run --cwd packages/shared build && bun run --cwd apps/web build",
     "types:cf": "bun run --cwd apps/web types:cf && bun run --cwd apps/worker-edge-guard types:cf && bun run --cwd apps/worker-post-events types:cf && bun run --cwd apps/worker-og types:cf",
     "types:cf:check": "bun run --cwd apps/web types:cf:check && bun run --cwd apps/worker-edge-guard types:cf:check && bun run --cwd apps/worker-post-events types:cf:check && bun run --cwd apps/worker-og types:cf:check",
-    "check": "bun run types:cf:check && bun run --cwd packages/shared build && bunx tsc -p packages/auth-hasher-contracts/tsconfig.json --noEmit && bunx tsc -p packages/auth-hasher-client/tsconfig.json --noEmit && bunx tsc -p packages/auth-hasher-better-auth-adapter/tsconfig.json --noEmit && bunx tsc -p packages/auth-hasher/tsconfig.json --noEmit && bunx tsc -p apps/api/tsconfig.json --noEmit && bunx tsc -p apps/auth-hasher-worker/tsconfig.json --noEmit && bunx tsc -p apps/worker-content/tsconfig.json --noEmit && bunx tsc -p apps/worker-meta/tsconfig.json --noEmit && bunx tsc -p apps/worker-edge-guard/tsconfig.json --noEmit && bunx tsc -p apps/worker-post-events/tsconfig.json --noEmit && bunx tsc -p apps/worker-og/tsconfig.json --noEmit && bun run --cwd apps/web check",
+    "check": "bun run types:cf:check && bun run --cwd packages/shared build && bun scripts/typecheck.ts && bun run --cwd apps/web check",
     "check:ci": "bun run check && bun run verify:openapi",
     "test:unit": "bun run --cwd packages/api test && bun test packages/auth-hasher-contracts/test/index.test.ts packages/auth-hasher-client/test/index.test.ts packages/gateway/src/resolver.test.ts packages/shared/test/auth-bridge.test.ts packages/shared/test/og-template.test.ts apps/web/src/lib/server/auth-social.test.ts apps/web/src/lib/server/auth-password-hasher.test.ts apps/web/src/lib/server/auth-password-rehash.test.ts apps/web/src/lib/server/og-worker.test.ts apps/auth-hasher-worker/src/fetch-handler.test.ts apps/auth-hasher-worker/src/kernel-node.test.ts && bun run --cwd apps/worker-edge-guard test && bun run --cwd apps/worker-post-events test && bun run --cwd apps/worker-og test",
     "gen:openapi": "bun run --cwd packages/shared build && bun packages/api/scripts/gen-openapi.ts",
@@ -21,16 +21,22 @@
     "test:e2e": "bun run --cwd apps/web test:e2e",
     "test:e2e:solo": "bun run --cwd apps/web test:e2e:solo",
     "smoke:web:cf": "bun scripts/smoke-web-cf.ts",
-    "smoke:web:cf:services": "bun scripts/smoke-web-cf-services.ts"
+    "smoke:web:cf:services": "bun scripts/smoke-web-cf-services.ts",
+    "graph:ttsc": "bun node_modules/@ttsc/graph/lib/bin.js",
+    "graph:ttsc:view": "bun node_modules/@ttsc/graph/lib/bin.js view"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "@typia/interface": "13.0.0-dev.20260626.1",
+    "@typia/utils": "13.0.0-dev.20260626.1"
+  },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260616.1",
-    "typescript": "^5.9.3",
-    "ttsc": "0.15.4",
+    "@ttsc/graph": "0.16.7",
+    "typescript": "7.0.1-rc",
+    "ttsc": "0.16.7",
     "@types/bun": "^1.3.14"
   },
   "module": "index.ts",

@@ -15,6 +15,6 @@
     "@repo/auth-hasher-contracts": "workspace:*"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "7.0.1-rc"
   }
 }
