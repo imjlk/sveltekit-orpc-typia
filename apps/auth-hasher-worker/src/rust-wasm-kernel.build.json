@@ -7,7 +7,7 @@
     "outputLength": 32
   },
   "artifactOwaspAligned": true,
-  "artifactSourceChecksum": "af7572bb49b5c16f262cf62099eb1cdb1732ed5317b4ccf478a38165fcbb2ea6",
+  "artifactSourceChecksum": "278d26dfb6bdcb6fc1d1d584dce0d74d92e27ff505b8bc4cf892b712e3ff04a3",
   "generatedBy": "bun run build:kernel",
   "inputs": [
     "Cargo.lock",

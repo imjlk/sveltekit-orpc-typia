@@ -40,7 +40,7 @@
     "dev": "tsup --watch"
   },
   "devDependencies": {
-    "@ttsc/unplugin": "0.15.4",
+    "@ttsc/unplugin": "0.16.6",
     "@types/bun": "latest",
     "tsup": "^8.5.1"
   },
@@ -52,6 +52,6 @@
     "@orpc/server": "^1.14.6",
     "@repo/db": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
-    "typia": "13.0.0-dev.20260612.1"
+    "typia": "13.0.0-dev.20260626.1"
   }
 }

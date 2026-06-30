@@ -10,9 +10,9 @@
     "types:cf:check": "wrangler types src/cloudflare-env.d.ts --include-runtime false --strict-vars false --check"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260617.1",
+    "@cloudflare/workers-types": "^4.20260628.1",
     "typescript": "^5.9.3",
-    "wrangler": "^4.101.0"
+    "wrangler": "^4.105.0"
   },
   "dependencies": {
     "@repo/shared": "workspace:*"
