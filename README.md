@@ -8,6 +8,8 @@ Public release checklist: [`docs/public-release.md`](./docs/public-release.md)
 
 Security policy: [`SECURITY.md`](./SECURITY.md)
 
+TypeScript graph tooling: [`docs/ttsc-graph.md`](./docs/ttsc-graph.md)
+
 ## What This Template Gives You
 
 - `SvelteKit` running on Cloudflare Pages

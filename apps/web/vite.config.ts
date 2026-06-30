@@ -2,11 +2,8 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import ttsc from '@ttsc/unplugin/vite';
 import path from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
-import { ensureNativePreviewTsgoBinary } from '../../scripts/resolve-tsgo-binary';
 
 const sharedSourceDir = path.resolve(__dirname, '../../packages/shared/src');
-
-ensureNativePreviewTsgoBinary();
 
 const sharedTypiaPlugin = (): Plugin => {
 	const plugin = ttsc() as Plugin;

@@ -54,7 +54,7 @@
     "db:migrate:pg": "drizzle-kit migrate --config drizzle.pg.config.ts"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "7.0.1-rc"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

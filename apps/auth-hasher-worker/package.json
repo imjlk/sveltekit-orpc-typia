@@ -7,12 +7,12 @@
 		"build:kernel": "bun ./scripts/build-kernel.ts",
 		"dev": "wrangler dev --local",
 		"deploy": "wrangler deploy",
-		"check": "bun run build:kernel && bunx tsc -p tsconfig.json --noEmit && cargo check --manifest-path Cargo.toml --target wasm32-unknown-unknown",
+		"check": "bun run build:kernel && bun ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit && cargo check --manifest-path Cargo.toml --target wasm32-unknown-unknown",
 		"test": "bun test src/fetch-handler.test.ts src/kernel-node.test.ts"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20260628.1",
-		"typescript": "^5.9.3",
+		"typescript": "7.0.1-rc",
 		"wrangler": "^4.105.0"
 	},
 	"dependencies": {

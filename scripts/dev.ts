@@ -56,7 +56,7 @@ const spawnPrefixed = (spec: ProcSpec) => {
 };
 
 const waitForSharedDist = async () => {
-  // tsup --watch does an initial build, but we still guard on the file existing
+  // The shared watch script does an initial build, but we still guard on the file existing
   // to avoid "Cannot find module dist/*" races in api/web startup.
   const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
